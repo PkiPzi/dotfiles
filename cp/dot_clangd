@@ -1,0 +1,6 @@
+# no compile_commands.json for single-file solutions, so give clangd the flags
+CompileFlags:
+  Add: [-std=c++20, -Wall, -Wextra, -Wno-unused-const-variable, -DLOCAL]
+Diagnostics:
+  UnusedIncludes: None
+  MissingIncludes: None

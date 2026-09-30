@@ -31,6 +31,16 @@ That installs the packages, Krohnkite and switches the login shell to zsh (`run_
 
 Shortcuts live in `kde-tiling-setup`; change them there, not in System Settings.
 
+## Theme
+
+Catppuccin Mocha by default. `theme onedark` switches KDE colours, icons, alacritty, nvim and bat back to One Dark / Breeze Dark; `theme catppuccin` switches again.
+
+## Competitive programming (C++)
+
+- Install the [Competitive Companion](https://github.com/jmerle/competitive-companion) browser extension, then in nvim `<leader>rp` (problem) or `<leader>rc` (contest) and click the extension on the problem page. Files land in `~/cp/<judge>/<contest>/`, starting from `~/cp/template.cpp`.
+- `<leader>rr` compiles and runs every testcase; `<leader>ra` / `<leader>re` add or edit testcases.
+- In the shell: `cr a.cpp < in.txt` to compile and run, `crd` for a sanitizer debug build.
+
 ## Everyday
 
 - `chezmoi edit <file>` then `chezmoi apply`, or edit in place and `chezmoi re-add`

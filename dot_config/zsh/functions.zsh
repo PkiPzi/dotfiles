@@ -22,3 +22,8 @@ mkcd() { mkdir -p -- "$1" && cd -- "$1" }
 
 # open anything with its default KDE app, detached from the terminal
 o() { setsid -f xdg-open "$@" >/dev/null 2>&1 }
+
+# competitive programming: `cr a.cpp < in.txt` compiles and runs,
+# `crd` does a debug build with sanitizers to catch out-of-bounds / UB
+cr()  { g++ -std=c++20 -O2 -Wall -DLOCAL "$1" -o "${1%.*}" && "./${1%.*}" "${@:2}" }
+crd() { g++ -std=c++20 -g -Wall -DLOCAL -fsanitize=address,undefined "$1" -o "${1%.*}" && "./${1%.*}" "${@:2}" }

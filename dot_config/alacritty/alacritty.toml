@@ -1,7 +1,7 @@
-# One Dark, ported from the old alacritty.yml
-
 [general]
 live_config_reload = true
+# symlink managed by ~/.local/bin/theme
+import = ["~/.config/alacritty/theme.toml"]
 
 [window]
 padding = { x = 6, y = 6 }
@@ -17,30 +17,6 @@ semantic_escape_chars = ",│`|:\"' ()[]{}<>\t"
 [font]
 size = 12
 normal = { family = "FiraCode Nerd Font", style = "Regular" }
-
-[colors.primary]
-background = "#1e2127"
-foreground = "#abb2bf"
-
-[colors.normal]
-black   = "#1e2127"
-red     = "#e06c75"
-green   = "#98c379"
-yellow  = "#d19a66"
-blue    = "#61afef"
-magenta = "#c678dd"
-cyan    = "#56b6c2"
-white   = "#abb2bf"
-
-[colors.bright]
-black   = "#5c6370"
-red     = "#e06c75"
-green   = "#98c379"
-yellow  = "#d19a66"
-blue    = "#61afef"
-magenta = "#c678dd"
-cyan    = "#56b6c2"
-white   = "#dcdfe4"
 
 [keyboard]
 bindings = [

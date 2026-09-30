@@ -1,3 +1,5 @@
 #!/bin/bash
 # Re-runs whenever kde-tiling-setup changes: {{ include "dot_local/bin/executable_kde-tiling-setup" | sha256sum }}
 [[ $XDG_CURRENT_DESKTOP == KDE ]] && ~/.local/bin/kde-tiling-setup
+# theme.toml is a symlink the theme script owns, so create it on a fresh machine
+~/.local/bin/theme "$(cat ~/.local/state/theme 2>/dev/null || echo catppuccin)"

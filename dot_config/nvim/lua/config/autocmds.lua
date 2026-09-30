@@ -6,3 +6,9 @@
 --
 -- Or remove existing autocmds by their group name (which is prefixed with `lazyvim_` for the defaults)
 -- e.g. vim.api.nvim_del_augroup_by_name("lazyvim_wrap_spell")
+
+-- new .cpp files under ~/cp start from the template
+vim.api.nvim_create_autocmd("BufNewFile", {
+  pattern = vim.fn.expand("~") .. "/cp/*.cpp",
+  command = "0r ~/cp/template.cpp",
+})

@@ -6,7 +6,10 @@ sudo pacman -S --needed --noconfirm \
 	zsh zsh-completions zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search \
 	alacritty ttf-firacode-nerd \
 	fzf fd ripgrep eza bat zoxide starship git-delta \
-	neovim tree-sitter-cli lazygit unzip fastfetch btop wl-clipboard python-dbus
+	neovim tree-sitter-cli lazygit unzip gcc gdb fastfetch btop wl-clipboard python-dbus \
+	papirus-icon-theme
+
+yay -S --needed --noconfirm catppuccin-plasma-colorscheme-mocha
 
 # krohnkite from its release (the AUR source tarball checksum is flaky)
 if [[ ! -d ~/.local/share/kwin/scripts/krohnkite && ! -d /usr/share/kwin/scripts/krohnkite ]]; then

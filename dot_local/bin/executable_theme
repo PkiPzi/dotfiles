@@ -1,0 +1,27 @@
+#!/bin/bash
+# theme [catppuccin|onedark] — switch KDE colours, icons, alacritty, nvim and bat together.
+# starship, fzf, eza and lazygit use the terminal palette, so they follow alacritty.
+set -euo pipefail
+
+state="${XDG_STATE_HOME:-$HOME/.local/state}/theme"
+
+case "${1:-}" in
+	catppuccin) scheme=CatppuccinMochaMauve icons=Papirus-Dark ;;
+	onedark)    scheme=BreezeDark           icons=breeze-dark ;;
+	"")
+		echo "current: $(cat "$state" 2>/dev/null || echo catppuccin)"
+		echo "usage: theme catppuccin|onedark"
+		exit 0 ;;
+	*) echo "unknown theme: $1" >&2; exit 1 ;;
+esac
+
+mkdir -p "$(dirname "$state")"
+echo "$1" > "$state"
+ln -sfn "themes/$1.toml" "$HOME/.config/alacritty/theme.toml"
+
+if [[ ${XDG_CURRENT_DESKTOP:-} == KDE ]]; then
+	plasma-apply-colorscheme "$scheme" >/dev/null || true  # non-zero when already applied
+	/usr/lib/plasma-changeicons "$icons"
+fi
+
+echo "switched to $1 (reopen nvim; new shells pick up the bat theme)"
