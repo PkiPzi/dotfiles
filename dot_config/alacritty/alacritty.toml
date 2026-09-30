@@ -1,10 +1,9 @@
 [general]
 live_config_reload = true
-# symlink managed by ~/.local/bin/theme
-import = ["~/.config/alacritty/theme.toml"]
+# symlink to rices/<name>.toml, managed by ~/.local/bin/rice
+import = ["~/.config/alacritty/rice.toml"]
 
 [window]
-padding = { x = 6, y = 6 }
 dynamic_padding = true
 
 [scrolling]
@@ -13,10 +12,6 @@ history = 10000
 [selection]
 save_to_clipboard = true
 semantic_escape_chars = ",│`|:\"' ()[]{}<>\t"
-
-[font]
-size = 12
-normal = { family = "FiraCode Nerd Font", style = "Regular" }
 
 [keyboard]
 bindings = [

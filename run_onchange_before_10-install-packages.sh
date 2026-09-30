@@ -7,9 +7,47 @@ sudo pacman -S --needed --noconfirm \
 	alacritty ttf-firacode-nerd \
 	fzf fd ripgrep eza bat zoxide starship git-delta \
 	neovim tree-sitter-cli lazygit unzip gcc gdb fastfetch btop wl-clipboard python-dbus \
-	papirus-icon-theme
+	papirus-icon-theme ttf-jetbrains-mono-nerd rofi yazi cava glow chafa
 
-yay -S --needed --noconfirm catppuccin-plasma-colorscheme-mocha
+# the solstice rice (see ~/.local/bin/rice)
+yay -S --needed --noconfirm \
+	catppuccin-plasma-colorscheme-mocha catppuccin-sddm-theme-mocha yamis-icon-theme-git ttf-karla \
+	kwin-effects-better-blur-dx kwin-effect-rounded-corners kwin6-effects-burn-my-windows \
+	kwin-effects-geometry-change plasma6-applets-panel-colorizer plasma6-applets-wallpaper-effects \
+	plasma6-applets-window-title plasma6-applets-plasmusic-toolbar
+
+# KDE Store items, checked against the store's md5
+store_get() { # id filename -> path of the verified download
+	python3 - "$1" "$2" <<'EOF'
+import hashlib, json, sys, tempfile, urllib.request
+cid, name = sys.argv[1], sys.argv[2]
+d = json.load(urllib.request.urlopen(f"https://api.kde-look.org/ocs/v1/content/data/{cid}?format=json"))["data"][0]
+i = next(i for i in range(1, 20) if d.get(f"downloadname{i}") == name)
+data = urllib.request.urlopen(d[f"downloadlink{i}"]).read()
+if hashlib.md5(data).hexdigest() != d[f"downloadmd5sum{i}"]:
+    sys.exit(f"{name}: md5 mismatch")
+path = f"{tempfile.mkdtemp()}/{name}"
+open(path, "wb").write(data)
+print(path)
+EOF
+}
+if [[ ! -d ~/.local/share/plasma/desktoptheme/Amethyst.Haze ]]; then
+	mkdir -p ~/.local/share/plasma/desktoptheme
+	tar -xf "$(store_get 2218601 Amethyst.Haze.tar.xz)" -C ~/.local/share/plasma/desktoptheme
+fi
+if [[ ! -d ~/.local/share/kwin/scripts/FullOpacityFS ]]; then
+	kpackagetool6 --type=KWin/Script -i "$(store_get 2316974 FullOpacityFS.kwinscript)"
+fi
+
+# wallpapers and the rofi banner from solstice-dots, pinned
+solstice=https://raw.githubusercontent.com/Kuehnelt/solstice-dots/f4d75b2258244e4fa5d718cf8dd89678ec263676
+mkdir -p ~/.local/share/wallpapers/solstice ~/.config/rofi
+for w in storm.jpg dark-forest.jpg purpled-night.jpg serenity.jpg soft-rose.jpg haunted-house.jpg \
+	wanderer.jpg hollow-knight.jpg knight-templar.jpg bg.png flowers-1.jpg flowers-2.jpg flowers-4.jpg \
+	flowers-9.jpg flowers-12.jpg flowers-13.jpg flowers-15.jpg; do
+	[[ -e ~/.local/share/wallpapers/solstice/$w ]] || curl -fsSL -o ~/.local/share/wallpapers/solstice/$w "$solstice/wallpapers/$w"
+done
+[[ -e ~/.config/rofi/girl-2.png ]] || curl -fsSL -o ~/.config/rofi/girl-2.png "$solstice/config/rofi/girl-2.png"
 
 # krohnkite from its release (the AUR source tarball checksum is flaky)
 if [[ ! -d ~/.local/share/kwin/scripts/krohnkite && ! -d /usr/share/kwin/scripts/krohnkite ]]; then

@@ -27,3 +27,13 @@ o() { setsid -f xdg-open "$@" >/dev/null 2>&1 }
 # `crd` does a debug build with sanitizers to catch out-of-bounds / UB
 cr()  { g++ -std=c++20 -O2 -Wall -DLOCAL "$1" -o "${1%.*}" && "./${1%.*}" "${@:2}" }
 crd() { g++ -std=c++20 -g -Wall -DLOCAL -fsanitize=address,undefined "$1" -o "${1%.*}" && "./${1%.*}" "${@:2}" }
+
+# yazi, and cd to wherever you quit it
+y() {
+	local tmp="$(mktemp -t yazi-cwd.XXXXXX)" cwd
+	yazi "$@" --cwd-file="$tmp"
+	if cwd="$(<"$tmp")" && [[ -n $cwd && $cwd != $PWD ]]; then
+		builtin cd -- "$cwd"
+	fi
+	rm -f -- "$tmp"
+}

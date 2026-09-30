@@ -1,0 +1,23 @@
+# solstice: Catppuccin Mocha, but quieter. The background is translucent and
+# blurred so the muted wallpaper shows through, text is subtext1 instead of the
+# brighter text colour, and a little extra line height keeps it airy.
+[general]
+import = ["~/.config/alacritty/themes/catppuccin.toml"]
+
+[window]
+opacity = 0.82
+blur = true
+padding = { x = 12, y = 10 }
+
+[font]
+size = 11
+offset = { x = 0, y = 2 }
+normal = { family = "JetBrainsMono Nerd Font", style = "Regular" }
+
+[colors.primary]
+foreground = "#bac2de"
+bright_foreground = "#cdd6f4"
+
+[colors.cursor]
+text = "#1e1e2e"
+cursor = "#b4befe"

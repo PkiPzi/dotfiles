@@ -7,10 +7,6 @@ path=("$HOME/.local/bin" $path)
 export EDITOR=nvim
 export VISUAL=nvim
 export TERMINAL=alacritty
-if [[ $(<"$HOME/.local/state/theme" 2>/dev/null) == onedark ]]; then
-	export BAT_THEME="OneHalfDark"
-else
-	export BAT_THEME="Catppuccin Mocha"
-fi
+export BAT_THEME="Catppuccin Mocha"
 export MANPAGER="sh -c 'col -bx | bat -l man -p'"
 export MANROFFOPT="-c"

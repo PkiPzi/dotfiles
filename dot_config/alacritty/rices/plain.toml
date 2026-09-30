@@ -1,0 +1,10 @@
+# the pre-rice look: solid Catppuccin Mocha, Fira Code
+[general]
+import = ["~/.config/alacritty/themes/catppuccin.toml"]
+
+[window]
+padding = { x = 6, y = 6 }
+
+[font]
+size = 12
+normal = { family = "FiraCode Nerd Font", style = "Regular" }

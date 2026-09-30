@@ -13,11 +13,7 @@ DESKTOPS = 5
 TERMINAL = "Alacritty.desktop"
 
 KROHNKITE = {
-    "screenGapBetween": 8,
-    "screenGapLeft": 8,
-    "screenGapRight": 8,
-    "screenGapTop": 8,
-    "screenGapBottom": 8,
+    # gaps belong to the look, see ~/.local/bin/rice
     "noTileBorder": "true",  # hide titlebars on tiled windows
     # Meta+Space cycles through these, in this order; 0 disables a layout
     "tileLayoutOrder": 1,
