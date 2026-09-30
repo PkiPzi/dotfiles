@@ -1,0 +1,45 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+add_newline = false
+format = """
+$directory$git_branch$git_state$git_status$python$nodejs$rust$golang$java$cmd_duration$jobs
+$character"""
+
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
+vimcmd_symbol = "[❮](bold green)"
+
+[directory]
+style = "bold blue"
+truncation_length = 4
+truncate_to_repo = true
+
+[git_branch]
+format = "[$symbol$branch]($style) "
+symbol = " "
+style = "bold magenta"
+
+[git_status]
+format = "([$all_status$ahead_behind]($style) )"
+style = "bold red"
+
+[cmd_duration]
+min_time = 2000
+format = "[took $duration]($style) "
+style = "yellow"
+
+[python]
+format = "[${symbol}${version}( \\($virtualenv\\))]($style) "
+
+[nodejs]
+format = "[$symbol$version]($style) "
+
+[rust]
+format = "[$symbol$version]($style) "
+
+[golang]
+format = "[$symbol$version]($style) "
+
+[java]
+format = "[$symbol$version]($style) "

@@ -1,0 +1,30 @@
+# history
+HISTFILE="$HOME/.local/state/zsh/history"
+HISTSIZE=50000
+SAVEHIST=50000
+
+setopt CORRECT
+setopt NO_NOMATCH
+setopt LIST_PACKED
+setopt ALWAYS_TO_END
+setopt NOCASEGLOB
+setopt NUMERICGLOBSORT
+setopt GLOB_COMPLETE
+setopt COMPLETE_ALIASES
+setopt COMPLETE_IN_WORD
+setopt AUTO_CD
+setopt AUTO_PUSHD
+setopt PUSHD_IGNORE_DUPS
+setopt AUTO_CONTINUE
+setopt LONG_LIST_JOBS
+setopt HIST_VERIFY
+setopt SHARE_HISTORY
+setopt HIST_IGNORE_SPACE
+setopt HIST_SAVE_NO_DUPS
+setopt HIST_IGNORE_ALL_DUPS
+setopt HIST_REDUCE_BLANKS
+setopt EXTENDED_GLOB
+setopt TRANSIENT_RPROMPT
+setopt INTERACTIVE_COMMENTS
+
+zmodload -i zsh/complist # menu completion

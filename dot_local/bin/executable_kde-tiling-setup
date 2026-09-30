@@ -1,0 +1,187 @@
+#!/usr/bin/env python3
+"""Configure Krohnkite, virtual desktops, global shortcuts and the default
+terminal on KDE Plasma 6. Safe to re-run."""
+
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+import dbus
+
+DESKTOPS = 5
+TERMINAL = "Alacritty.desktop"
+
+KROHNKITE = {
+    "screenGapBetween": 8,
+    "screenGapLeft": 8,
+    "screenGapRight": 8,
+    "screenGapTop": 8,
+    "screenGapBottom": 8,
+    "noTileBorder": "true",  # hide titlebars on tiled windows
+    # Meta+Space cycles through these, in this order; 0 disables a layout
+    "tileLayoutOrder": 1,
+    "monocleLayoutOrder": 2,
+    "columnsLayoutOrder": 3,
+    "threeColumnLayoutOrder": 4,
+    "spiralLayoutOrder": 5,
+    "quarterLayoutOrder": 0,
+    "stackedLayoutOrder": 0,
+    "spreadLayoutOrder": 0,
+    "floatingLayoutOrder": 0,
+    "stairLayoutOrder": 0,
+    "binaryTreeLayoutOrder": 0,
+    "cascadeLayoutOrder": 0,
+    "floatingClass": "org.kde.kcalc,org.kde.kdeconnect.app,pinentry-qt,"
+    "org.kde.plasma-systemmonitor,systemsettings,org.kde.ark",
+}
+
+# (component, action) -> shortcuts. An empty list unbinds.
+# Unbinds come first so the keys are free when they get reassigned.
+UNBIND = [
+    ("kwin", "Show Desktop"),  # Meta+D
+    ("kwin", "Edit Tiles"),  # Meta+T
+    ("plasmashell", "manage activities"),  # Meta+Q
+    ("org.kde.konsole.desktop", "_launch"),  # Ctrl+Alt+T
+    ("kwin", "KrohnkiteFocusNext"),  # Meta+. is the emoji picker
+    ("kwin", "KrohnkiteFocusPrev"),
+    *[("plasmashell", f"activate task manager entry {n}") for n in range(1, 10)],
+]
+
+BIND = {
+    ("ksmserver", "Lock Session"): ["Ctrl+Alt+L", "ScreenSaver"],
+    ("kwin", "Window Close"): ["Meta+Q", "Alt+F4"],
+    # focus / move / resize
+    ("kwin", "KrohnkiteFocusLeft"): ["Meta+H"],
+    ("kwin", "KrohnkiteFocusDown"): ["Meta+J"],
+    ("kwin", "KrohnkiteFocusUp"): ["Meta+K"],
+    ("kwin", "KrohnkiteFocusRight"): ["Meta+L"],
+    ("kwin", "KrohnkiteShiftLeft"): ["Meta+Shift+H"],
+    ("kwin", "KrohnkiteShiftDown"): ["Meta+Shift+J"],
+    ("kwin", "KrohnkiteShiftUp"): ["Meta+Shift+K"],
+    ("kwin", "KrohnkiteShiftRight"): ["Meta+Shift+L"],
+    ("kwin", "KrohnkiteShrinkWidth"): ["Meta+Ctrl+H"],
+    ("kwin", "KrohnkiteGrowHeight"): ["Meta+Ctrl+J"],
+    ("kwin", "KrohnkiteShrinkHeight"): ["Meta+Ctrl+K"],
+    ("kwin", "KrohnkitegrowWidth"): ["Meta+Ctrl+L"],
+    # layout
+    ("kwin", "KrohnkiteSetMaster"): ["Meta+Shift+Return"],
+    ("kwin", "KrohnkiteIncrease"): ["Meta+I"],
+    ("kwin", "KrohnkiteDecrease"): ["Meta+D"],
+    ("kwin", "KrohnkiteToggleFloat"): ["Meta+F"],
+    ("kwin", "KrohnkiteFloatAll"): ["Meta+Shift+F"],
+    ("kwin", "KrohnkiteNextLayout"): ["Meta+Space"],
+    ("kwin", "KrohnkitePreviousLayout"): ["Meta+Shift+Space"],
+    ("kwin", "KrohnkiteRotate"): ["Meta+R"],
+    ("kwin", "KrohnkiteRotatePart"): ["Meta+Shift+R"],
+    ("kwin", "KrohnkiteTileLayout"): ["Meta+T"],
+    ("kwin", "KrohnkiteMonocleLayout"): ["Meta+M"],
+    # apps
+    (TERMINAL, "_launch"): ["Meta+Return", "Ctrl+Alt+T"],
+}
+SHIFTED_DIGITS = "!@#$%^&*("
+for n in range(1, 10):
+    BIND[("kwin", f"Switch to Desktop {n}")] = [f"Meta+{n}"]
+    # Shift+digit arrives as the shifted symbol on some layouts, so bind both
+    BIND[("kwin", f"Window to Desktop {n}")] = [
+        f"Meta+Shift+{n}",
+        f"Meta+{SHIFTED_DIGITS[n - 1]}",
+    ]
+
+FRIENDLY = {
+    TERMINAL: ("Alacritty", "Launch Alacritty"),
+}
+
+MODIFIERS = {"Shift": 0x02000000, "Ctrl": 0x04000000, "Alt": 0x08000000, "Meta": 0x10000000}
+KEYS = {
+    "Return": 0x01000004,
+    "Space": 0x20,
+    "Escape": 0x01000000,
+    "ScreenSaver": 0x010000BA,
+    **{f"F{i}": 0x01000030 + i - 1 for i in range(1, 13)},
+}
+
+
+def keycode(seq):
+    *mods, key = seq.split("+")
+    code = KEYS.get(key, ord(key.upper()) if len(key) == 1 else None)
+    if code is None:
+        sys.exit(f"unknown key in {seq!r}")
+    for m in mods:
+        code |= MODIFIERS[m]
+    return code
+
+
+def kwriteconfig(file, group, key, value):
+    subprocess.run(
+        ["kwriteconfig6", "--file", file, "--group", group, "--key", key, str(value)],
+        check=True,
+    )
+
+
+def main():
+    scripts = [Path("/usr/share/kwin/scripts/krohnkite"), Path.home() / ".local/share/kwin/scripts/krohnkite"]
+    if not any(p.exists() for p in scripts):
+        sys.exit("krohnkite is not installed (yay -S kwin-scripts-krohnkite)")
+
+    bus = dbus.SessionBus()
+    kwin = bus.get_object("org.kde.KWin", "/KWin")
+    vdm = bus.get_object("org.kde.KWin", "/VirtualDesktopManager")
+    accel = dbus.Interface(bus.get_object("org.kde.kglobalaccel", "/kglobalaccel"), "org.kde.KGlobalAccel")
+
+    # krohnkite
+    for key, value in KROHNKITE.items():
+        kwriteconfig("kwinrc", "Script-krohnkite", key, value)
+    kwriteconfig("kwinrc", "Plugins", "krohnkiteEnabled", "true")
+    kwin.reconfigure(dbus_interface="org.kde.KWin")
+    time.sleep(2)  # let the script load and register its shortcuts
+
+    # virtual desktops named 1..N
+    props = dbus.Interface(vdm, "org.freedesktop.DBus.Properties")
+    iface = "org.kde.KWin.VirtualDesktopManager"
+    while props.Get(iface, "count") < DESKTOPS:
+        count = props.Get(iface, "count")
+        vdm.createDesktop(dbus.UInt32(count), str(count + 1), dbus_interface=iface)
+    for position, desktop_id, _name in props.Get(iface, "desktops"):
+        vdm.setDesktopName(desktop_id, str(position + 1), dbus_interface=iface)
+
+    # shortcuts
+    def action_id(component, action):
+        friendly = FRIENDLY.get(component, ("", ""))
+        return dbus.Array([component, action, *friendly], signature="s")
+
+    def set_keys(component, action, seqs):
+        aid = action_id(component, action)
+        if component in FRIENDLY:
+            accel.doRegister(aid)
+        keys = dbus.Array(
+            [dbus.Struct([dbus.Array([keycode(s), 0, 0, 0], signature="i")]) for s in seqs],
+            signature="(ai)",
+        )
+        accel.setForeignShortcutKeys(aid, keys)
+
+    for component, action in UNBIND:
+        set_keys(component, action, [])
+    for (component, action), seqs in BIND.items():
+        set_keys(component, action, seqs)
+
+    # verify
+    failed = []
+    for (component, action), seqs in BIND.items():
+        got = {k[0][0] for k in accel.shortcutKeys(action_id(component, action))}
+        missing = [s for s in seqs if keycode(s) not in got]
+        if missing:
+            failed.append(f"{component} / {action}: {', '.join(missing)}")
+
+    # default terminal (Dolphin "Open Terminal", etc.)
+    kwriteconfig("kdeglobals", "General", "TerminalApplication", "alacritty")
+    kwriteconfig("kdeglobals", "General", "TerminalService", TERMINAL)
+
+    if failed:
+        print("these shortcuts did not stick:\n  " + "\n  ".join(failed))
+        sys.exit(1)
+    print(f"krohnkite enabled, {DESKTOPS} desktops, {len(BIND)} shortcuts set")
+
+
+if __name__ == "__main__":
+    main()

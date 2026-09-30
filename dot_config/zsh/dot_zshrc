@@ -1,0 +1,35 @@
+# ~/.config/zsh/.zshrc
+[[ $- != *i* ]] && return
+
+for f in settings completion aliases functions bindings; do
+	source "$ZDOTDIR/$f.zsh"
+done
+
+# fzf: Ctrl-T files, Ctrl-R history, Alt-C cd (must come after `bindkey -v`)
+export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_ALT_C_COMMAND='fd --type d --hidden --exclude .git'
+export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border'
+export FZF_CTRL_T_OPTS="--preview 'bat --color=always --style=numbers --line-range=:200 {}'"
+export FZF_ALT_C_OPTS="--preview 'eza --tree --level=2 --color=always --icons=always {}'"
+source <(fzf --zsh)
+
+# zoxide: `z foo` jumps, `zi` picks with fzf (replaces autojump)
+eval "$(zoxide init zsh)"
+
+# plugins from pacman — syntax-highlighting must load before history-substring-search
+plugins=/usr/share/zsh/plugins
+source $plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+source $plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+source $plugins/zsh-history-substring-search/zsh-history-substring-search.zsh
+unset plugins
+
+bindkey '^ ' autosuggest-accept
+bindkey '^[[A' history-substring-search-up
+bindkey '^[[B' history-substring-search-down
+bindkey '^[OA' history-substring-search-up
+bindkey '^[OB' history-substring-search-down
+bindkey -M vicmd 'k' history-substring-search-up
+bindkey -M vicmd 'j' history-substring-search-down
+
+eval "$(starship init zsh)"

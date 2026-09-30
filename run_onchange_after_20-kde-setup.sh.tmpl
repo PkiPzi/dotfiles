@@ -1,0 +1,3 @@
+#!/bin/bash
+# Re-runs whenever kde-tiling-setup changes: {{ include "dot_local/bin/executable_kde-tiling-setup" | sha256sum }}
+[[ $XDG_CURRENT_DESKTOP == KDE ]] && ~/.local/bin/kde-tiling-setup
