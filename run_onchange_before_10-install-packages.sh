@@ -13,8 +13,8 @@ sudo pacman -S --needed --noconfirm \
 yay -S --needed --noconfirm \
 	catppuccin-plasma-colorscheme-mocha catppuccin-sddm-theme-mocha yamis-icon-theme-git ttf-karla \
 	kwin-effects-better-blur-dx kwin-effect-rounded-corners kwin6-effects-burn-my-windows \
-	kwin-effects-geometry-change plasma6-applets-panel-colorizer plasma6-applets-wallpaper-effects \
-	plasma6-applets-window-title plasma6-applets-plasmusic-toolbar
+	kwin-effects-geometry-change plasma6-applets-panel-colorizer plasma6-applets-plasmusic-toolbar \
+	plasma6-applets-kara
 
 # KDE Store items, checked against the store's md5
 store_get() { # id filename -> path of the verified download

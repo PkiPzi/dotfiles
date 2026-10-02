@@ -1,11 +1,11 @@
-# solstice: Catppuccin Mocha, but quieter. The background is translucent and
-# blurred so the muted wallpaper shows through, text is subtext1 instead of the
+# solstice: Catppuccin Mocha, but quieter. The background is frosted glass (heavy blur,
+# grain, darkened by KWin) so the wallpaper is only a glow, text is subtext1 instead of the
 # brighter text colour, and a little extra line height keeps it airy.
 [general]
 import = ["~/.config/alacritty/themes/catppuccin.toml"]
 
 [window]
-opacity = 0.82
+opacity = 0.88
 blur = true
 padding = { x = 12, y = 10 }
 

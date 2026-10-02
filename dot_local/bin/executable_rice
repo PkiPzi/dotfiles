@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """rice [solstice|plain] — switch the desktop look. Run without arguments to see the current one.
 
-solstice  Kuehnelt/solstice-dots ported onto this setup: Catppuccin Mocha Red, Amethyst Haze,
-          monochrome icons, Karla, blur + rounded outlined windows, framed wallpaper, top bar
-          and dock, rofi on Meta, translucent alacritty, the solstice prompt and fastfetch.
+solstice  started from Kuehnelt/solstice-dots: Catppuccin Mocha Red, Amethyst Haze, monochrome
+          icons, Karla, frosted-acrylic blur, rounded outlined windows, a floating top bar of
+          glass islands (workspaces · clock · music + tray) over a full wallpaper, rofi on Meta,
+          frosted alacritty, the solstice prompt and fastfetch.
           Krohnkite, alacritty, zsh, nvim and every keybinding stay as they are.
 plain     puts back the KDE files saved the last time solstice was switched on, so any
           KDE setting changed while solstice was active is reverted too.
@@ -59,8 +60,11 @@ KWIN = {
         "WindowClasses": "",
         "BlurMenus": "true",
         "BlurDocks": "false",
-        "BlurStrength": 12,
-        "Saturation": 120,
+        # frosted acrylic: heavy blur, fine grain, darkened so the wallpaper is only a glow
+        "BlurStrength": 14,
+        "NoiseStrength": 6,
+        "Brightness": 85,
+        "Saturation": 100,
         "CornerRadius": 15,  # match the rounded corners below
     },
     "Round-Corners": {
@@ -118,29 +122,41 @@ RULES = {
     },
 }
 
-WALLPAPER_EFFECTS = {
-    "isEnabled": "true",
-    "hideWidget": "true",
-    # only the rounded dark frame; no blur/grain/pixelate/colour effects
-    "BlurMode": 4, "GrainMode": 4, "PixelateMode": 4, "colorEffectsMode": 4,
-    "borderEnabled": "true",
-    "borderColor": BASE,
-    "borderRadiusTopLeft": 15, "borderRadiusTopRight": 15,
-    "borderRadiusBottomLeft": 15, "borderRadiusBottomRight": 15,
-    "autoMargins": "true",  # follow the panels, plus these gaps
-    "autoMarginOffsetTop": 4, "autoMarginOffsetBottom": 4,
-    "autoMarginOffsetLeft": 12, "autoMarginOffsetRight": 12,
+# workspace numbers: the active one is a pink pill (matching the window outline), desktops
+# with windows get a faint grey pill, empty ones none
+KARA = {
+    "type": 1,  # numbers
+    "labelSource": 2,
+    "template": "%d",
+    "highlightType": 2,  # rounded box behind the number
+    "sqDefaultSize": "false",
+    "sqHighlightWidth": 24,
+    "sqHighlightHeight": 22,
+    "fixedLen": 30,
+    "plasmaStyleColors": "false",
+    "pColor": "#f38ba8",
+    "defaultAltTextColors": "false",
+    "altColor": "#1e1e2e",
+    "plasmaSemiColors": "false",
+    "semiColor": "#585b70",
+    "highlightOpacityFull": "false",
+    "slightlyHighlight": "true",
+    "animationDuration": 150,
+    "fontSize": 11,
+    "activeFontSize": 11,
+    "activeBold": "true",
+    "spacing": 2,
 }
 
 CLOCK = {
     "showDate": "true",
     "dateFormat": "custom",
-    "customDateFormat": "dddd, d MMM'  |'",
+    "customDateFormat": "ddd d MMM ' ·'",
     "dateDisplayFormat": 1,  # beside the time
     "use24hFormat": 2,
     "autoFontAndSize": "false",
     "fontFamily": "JetBrainsMono Nerd Font",
-    "fontSize": 10,
+    "fontSize": 9,
 }
 
 ROFI_DESKTOP = """[Desktop Entry]
@@ -219,63 +235,70 @@ def sddm(theme):
         print("login screen theme skipped (needs sudo)")
 
 
-def panels_js():
-    colorizer = json.loads(Path(
-        "/usr/share/plasma/plasmoids/luisbocanegra.panel.colorizer/contents/ui/presets/Transparent/settings.json"
+def islands():
+    """Panel Colorizer settings: no panel background, each group of widgets between two
+    spacers becomes one rounded glass pill."""
+    g = json.loads(Path(
+        "/usr/share/plasma/plasmoids/luisbocanegra.panel.colorizer/contents/ui/presets/Pulse/settings.json"
     ).read_text())["globalSettings"]
+    g["panel"]["normal"]["enabled"] = False
+    g["nativePanel"] = {"background": {"enabled": True, "opacity": 0, "shadow": False},
+                        "floatingDialogs": True, "floatingDialogsAllowOverride": True}
+    g["trayWidgets"]["normal"]["enabled"] = False
+    w = g["widgets"]["normal"]
+    w["enabled"] = True
+    w["blurBehind"] = True
+    w["backgroundColor"].update({"enabled": True, "sourceType": 0, "custom": BASE, "alpha": 0.72})
+    w["foregroundColor"]["enabled"] = False
+    w["radius"] = {"enabled": True, "corner": {c: 14 for c in ("topLeft", "topRight", "bottomRight", "bottomLeft")}}
+    w["margin"] = {"enabled": True, "side": {"top": 3, "bottom": 3, "left": 8, "right": 8}}
+    w["spacing"] = 6
+    w["border"].update({"enabled": True, "customSides": False, "width": 1})
+    w["border"]["color"].update({"enabled": True, "sourceType": 0, "custom": "#b4befe", "alpha": 0.16})
+    w["shadow"]["background"]["enabled"] = False
+    return g
+
+
+def panels_js():
     return f"""
-var colorizer = {json.dumps(json.dumps(colorizer))};
+var colorizer = {json.dumps(json.dumps(islands()))};
 var clock = {json.dumps(CLOCK)};
-var wallpaperEffects = {json.dumps(WALLPAPER_EFFECTS)};
+var kara = {json.dumps(KARA)};
 var wallpaper = {json.dumps("file://" + str(WALLPAPER))};
 
 function configure(widget, group, values) {{
     widget.currentConfigGroup = group;
     for (var k in values) widget.writeConfig(k, values[k]);
 }}
-function transparent(panel) {{
-    var w = panel.addWidget("luisbocanegra.panel.colorizer");
-    configure(w, ["General"], {{ globalSettings: colorizer, lastPreset: "Transparent", hideWidget: true }});
-}}
 
 panels().forEach(function (p) {{ p.remove(); }});
 
+// one floating top bar per screen; spacers split it into three islands
 for (var s = 0; s < screenCount; s++) {{
-    var top = new Panel("org.kde.panel");
-    top.screen = s;
-    top.location = "top";
-    top.height = 30;
-    top.floating = false;
-    top.addWidget("org.kde.plasma.kickoff");
-    configure(top.addWidget("org.kde.windowtitle"), ["General"], {{ filterByScreen: true }});
-    top.addWidget("org.kde.plasma.panelspacer");
-    configure(top.addWidget("org.kde.plasma.digitalclock"), ["Appearance"], clock);
-    top.addWidget("org.kde.plasma.panelspacer");
-    top.addWidget("plasmusic-toolbar");
-    top.addWidget("org.kde.plasma.systemtray");
-    transparent(top);
-
-    var dock = new Panel("org.kde.panel");
-    dock.screen = s;
-    dock.location = "bottom";
-    dock.height = 34;
-    dock.floating = false;
-    dock.addWidget("org.kde.plasma.pager");
-    dock.addWidget("org.kde.plasma.panelspacer");
-    configure(dock.addWidget("org.kde.plasma.icontasks"), ["General"], {{
-        launchers: "preferred://filemanager,applications:Alacritty.desktop,preferred://browser",
-        showOnlyCurrentScreen: true,
+    var bar = new Panel("org.kde.panel");
+    bar.screen = s;
+    bar.location = "top";
+    bar.height = 38;
+    bar.floating = true;
+    configure(bar.addWidget("org.dhruv8sh.kara"), ["General"], kara);
+    bar.addWidget("org.kde.plasma.panelspacer");
+    configure(bar.addWidget("org.kde.plasma.digitalclock"), ["Appearance"], clock);
+    bar.addWidget("org.kde.plasma.panelspacer");
+    bar.addWidget("plasmusic-toolbar");
+    bar.addWidget("org.kde.plasma.systemtray");
+    configure(bar.addWidget("luisbocanegra.panel.colorizer"), ["General"], {{
+        globalSettings: colorizer,
+        islandsEnabled: true,
+        islandSeparatorWidget: "org.kde.plasma.panelspacer",
+        hideWidget: true,
     }});
-    dock.addWidget("org.kde.plasma.panelspacer");
-    transparent(dock);
 }}
 
+// full wallpaper, no frame
 desktops().forEach(function (d) {{
     d.wallpaperPlugin = "org.kde.image";
     configure(d, ["Wallpaper", "org.kde.image", "General"], {{ Image: wallpaper, FillMode: 2 }});
-    var fx = d.widgets("luisbocanegra.desktop.wallpaper.effects");
-    var w = fx.length ? fx[0] : d.addWidget("luisbocanegra.desktop.wallpaper.effects");
-    configure(w, ["General"], wallpaperEffects);
+    d.widgets("luisbocanegra.desktop.wallpaper.effects").forEach(function (w) {{ w.remove(); }});
 }});
 """
 

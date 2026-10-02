@@ -34,9 +34,9 @@ Shortcuts live in `kde-tiling-setup`; change them there, not in System Settings.
 
 ## Rice
 
-`rice solstice` (the default) ports [Kuehnelt/solstice-dots](https://github.com/Kuehnelt/solstice-dots): Catppuccin Mocha Red, Amethyst Haze, monochrome icons, Karla, Better Blur DX, rounded windows with a pink outline, translucent windows, no titlebars, a rounded wallpaper frame with a top bar and dock, rofi on Meta, the solstice starship prompt, fastfetch, yazi, cava and glow themes, and the Catppuccin login screen. Krohnkite, alacritty and every keybinding stay as they are.
+`rice solstice` (the default) started from [Kuehnelt/solstice-dots](https://github.com/Kuehnelt/solstice-dots): Catppuccin Mocha Red, Amethyst Haze, monochrome icons, Karla, rounded windows with a pink outline, translucent windows, no titlebars, the Aura Glow open/close animation, rofi on Meta, the solstice starship prompt, fastfetch, yazi, cava and glow themes, and the Catppuccin login screen. On top of that: a floating top bar of three glass islands (kara workspaces 1-5 · clock · music + tray, via Panel Colorizer) over a full wallpaper, and frosted-acrylic blur (Better Blur DX: heavy blur, grain, darkened). Krohnkite, alacritty and every keybinding stay as they are.
 
-Alacritty gets the soft version of the look: a translucent blurred background, subtext1 instead of the brighter text colour, JetBrains Mono with extra line height. Nvim goes transparent with it.
+Alacritty gets the soft version of the look: a frosted background, subtext1 instead of the brighter text colour, JetBrains Mono with extra line height. Nvim goes transparent with it.
 
 `rice plain` restores the KDE files saved when solstice was switched on (panels, colours, effects, rules) and the plain alacritty/prompt. `rice` alone shows which one is active.
 
