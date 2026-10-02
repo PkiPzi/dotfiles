@@ -1,11 +1,10 @@
-# solstice: Catppuccin Mocha, but quieter. The background is frosted glass (heavy blur,
-# grain, darkened by KWin) so the wallpaper is only a glow, text is subtext1 instead of the
-# brighter text colour, and a little extra line height keeps it airy.
+# solstice: the same glass as the top bar pills (Catppuccin base at 72% over KWin's frosted
+# blur), JetBrains Mono with a little extra line height.
 [general]
 import = ["~/.config/alacritty/themes/catppuccin.toml"]
 
 [window]
-opacity = 0.88
+opacity = 0.72
 blur = true
 padding = { x = 12, y = 10 }
 
@@ -13,10 +12,6 @@ padding = { x = 12, y = 10 }
 size = 11
 offset = { x = 0, y = 2 }
 normal = { family = "JetBrainsMono Nerd Font", style = "Regular" }
-
-[colors.primary]
-foreground = "#bac2de"
-bright_foreground = "#cdd6f4"
 
 [colors.cursor]
 text = "#1e1e2e"

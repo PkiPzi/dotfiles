@@ -172,6 +172,8 @@ def main():
     # default terminal (Dolphin "Open Terminal", etc.)
     kwriteconfig("kdeglobals", "General", "TerminalApplication", "alacritty")
     kwriteconfig("kdeglobals", "General", "TerminalService", TERMINAL)
+    # Konsole too: the Catppuccin profile starts zsh explicitly
+    kwriteconfig("konsolerc", "Desktop Entry", "DefaultProfile", "Catppuccin.profile")
 
     if failed:
         print("these shortcuts did not stick:\n  " + "\n  ".join(failed))

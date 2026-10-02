@@ -97,8 +97,8 @@ KWIN = {
 NORMAL, DIALOG = 1, 32
 RULES = {
     "rice-alacritty": {
-        "Description": "rice: alacritty keeps crisp text (its background is translucent itself)",
-        "wmclass": "[Aa]lacritty", "wmclassmatch": 3, "types": NORMAL,
+        "Description": "rice: terminals keep crisp text (their background is translucent itself)",
+        "wmclass": "[Aa]lacritty|konsole", "wmclassmatch": 3, "types": NORMAL,
         "opacityactive": 100, "opacityactiverule": 2,
         "opacityinactive": 92, "opacityinactiverule": 2,
     },
