@@ -15,6 +15,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -34,6 +35,12 @@ KDE_FILES = [
     "kscreenlockerrc",
 ]
 SDDM_CONF = Path("/etc/sddm.conf.d/10-rice.conf")
+# the lock screen lives in the Plasma shell package; the locker (and only the locker, via KWin's
+# environment) gets a copy of the stock one with a few visual patches, see lockscreen()
+STOCK_SHELL = Path("/usr/share/plasma/shells/org.kde.plasma.desktop")
+LOCK_SHELL = "org.rice.lockscreen"
+LOCK_PKG = HOME / ".local/share/plasma/shells" / LOCK_SHELL
+KWIN_DROPIN = CONFIG / "systemd/user/plasma-kwin_wayland.service.d/rice-lockscreen.conf"
 
 WALLPAPER = HOME / ".local/share/wallpapers/solstice/storm.jpg"
 UI_FONT = "Karla,11,-1,5,400,0,0,0,0,0,0,0,0,0,0,1"
@@ -42,20 +49,34 @@ MONO_FONT = "JetBrainsMono Nerd Font,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1"
 
 # Catppuccin Mocha
 RED = "243,139,168"
+RED_HEX = "#f38ba8"
+TEXT_HEX = "#cdd6f4"
+SUBTEXT_HEX = "#bac2de"
 SURFACE1 = "69,71,90"
 BASE = "#1e1e2e"
 # terminals and bar pills share this: the One Dark base from the original alacritty.yml
 GLASS = "#1e2127"
 GLASS_ALPHA = 0.80
+GLASS_BORDER = "#b4befe"  # faint lavender edge on the pills
+GLASS_BORDER_ALPHA = 0.16
 
-EFFECTS_ON = ["better_blur_dx", "kwin4_effect_shapecorners", "kwin6_effect_aura_glow", "kwin4_effect_geometry_change"]
-EFFECTS_OFF = ["blur", "scale"]  # replaced by better blur and aura glow
+EFFECTS_ON = ["better_blur_dx", "kwin4_effect_shapecorners", "kwin6_effect_aura_glow", "kwin4_effect_geometry_change",
+              # light animations: springy maximize and menus (JS), and built-in magic lamp minimize,
+              # crossfading desktop switch and a gentle wobble when dragging floating windows
+              "kinetic_maximize", "kinetic_fadingpopups", "magiclamp", "fadedesktop", "wobblywindows"]
+# replaced by better blur, aura glow, and the animations above
+EFFECTS_OFF = ["blur", "scale", "maximize", "fadingpopups", "squash", "slide"]
+# focused and hovered windows are opaque-ish, the rest lighter; the levels live in
+# ~/.local/share/kwin/scripts/rice-hover-opacity/contents/code/main.js
+HOVER_SCRIPT = "rice-hover-opacity"
 
 KWIN = {
     "Plugins": {
         **{f"{e}Enabled": "true" for e in EFFECTS_ON},
         **{f"{e}Enabled": "false" for e in EFFECTS_OFF},
-        "FullOpacityFSEnabled": "true",
+        # window opacity, including fullscreen, is done by the hover script below
+        f"{HOVER_SCRIPT}Enabled": "true",
+        "FullOpacityFSEnabled": "false",
     },
     "Effect-better-blur-dx": {
         "BlurMatching": "false",
@@ -83,6 +104,10 @@ KWIN = {
         "DisableRoundTile": "false",
         "DisableOutlineTile": "false",
     },
+    "Effect-wobblywindows": {
+        "WobblynessLevel": 0,  # the least wobbly preset
+        "ResizeWobble": "false",  # geometry change animates resizes
+    },
     "Script-krohnkite": {
         "screenGapBetween": 12,
         "screenGapLeft": 12,
@@ -96,28 +121,11 @@ KWIN = {
     },
 }
 
-# KWin uses the first rule that sets a property, so specific rules go first.
-NORMAL, DIALOG = 1, 32
+NORMAL = 1
+# opacity used to be Force rules here; KWin re-applied them on every focus change, which
+# fought with hover, so the hover script owns it now
+OLD_RULES = ["rice-alacritty", "rice-media", "rice-translucent"]
 RULES = {
-    "rice-alacritty": {
-        "Description": "rice: terminals keep crisp text (their background is translucent itself)",
-        "wmclass": "[Aa]lacritty|konsole", "wmclassmatch": 3, "types": NORMAL,
-        "opacityactive": 100, "opacityactiverule": 2,
-        "opacityinactive": 92, "opacityinactiverule": 2,
-    },
-    "rice-media": {
-        "Description": "rice: media and documents stay opaque",
-        "wmclass": "mpv|vlc|[Gg]wenview|[Ss]pectacle|[Oo]kular|[Hh]aruna|obs", "wmclassmatch": 3,
-        "types": NORMAL | DIALOG,
-        "opacityactive": 100, "opacityactiverule": 2,
-        "opacityinactive": 100, "opacityinactiverule": 2,
-    },
-    "rice-translucent": {
-        "Description": "rice: translucent windows",
-        "types": NORMAL | DIALOG,
-        "opacityactive": 90, "opacityactiverule": 2,
-        "opacityinactive": 85, "opacityinactiverule": 2,
-    },
     "rice-no-titlebar": {
         "Description": "rice: no titlebars",
         "types": NORMAL,
@@ -192,6 +200,26 @@ def kread(file, groups, key, default=""):
     return out
 
 
+def drop_rule(rule):
+    for key in ["Description", "wmclass", "wmclassmatch", "types", "opacityactive", "opacityactiverule",
+                "opacityinactive", "opacityinactiverule"]:
+        kdelete("kwinrulesrc", [rule], key)
+
+
+def kwin_script(js):
+    """Run a one-off KWin script."""
+    bus = dbus.SessionBus()
+    scripting = dbus.Interface(bus.get_object("org.kde.KWin", "/Scripting"), "org.kde.kwin.Scripting")
+    with tempfile.NamedTemporaryFile("w", suffix=".js") as f:
+        f.write(js)
+        f.flush()
+        scripting.unloadScript("rice-oneshot")
+        sid = scripting.loadScript(f.name, "rice-oneshot", signature="ss")
+        bus.get_object("org.kde.KWin", f"/Scripting/Script{sid}").run(dbus_interface="org.kde.kwin.Script")
+        time.sleep(0.5)
+        scripting.unloadScript("rice-oneshot")
+
+
 def plasma_script(js):
     shell = dbus.SessionBus().get_object("org.kde.plasmashell", "/PlasmaShell")
     return shell.evaluateScript(js, dbus_interface="org.kde.PlasmaShell")
@@ -238,6 +266,179 @@ def sddm(theme):
         print("login screen theme skipped (needs sudo)")
 
 
+def argb(hex_color, alpha):
+    return f"#{round(alpha * 255):02x}{hex_color[1:]}"
+
+
+LOCK_QML = {
+    "GlassPill.qml": f"""// the top bar's glass islands (~/.local/bin/rice)
+import QtQuick
+
+Rectangle {{
+    property bool lit: false  // keyboard focus: red ring, like the focused window outline
+    color: "{argb(GLASS, GLASS_ALPHA)}"
+    radius: 14
+    border.width: lit ? 2 : 1
+    border.color: lit ? "{RED_HEX}" : "{argb(GLASS_BORDER, GLASS_BORDER_ALPHA)}"
+    Behavior on border.color {{ ColorAnimation {{ duration: 150 }} }}
+}}
+""",
+    "GlassClock.qml": f"""// time and date on two pills, in the top bar clock's font and format
+import QtQuick
+import QtQuick.Layouts
+import org.kde.plasma.clock as PlasmaClock
+
+ColumnLayout {{
+    spacing: 10
+
+    GlassPill {{
+        Layout.alignment: Qt.AlignHCenter
+        implicitWidth: time.implicitWidth + 64
+        implicitHeight: time.implicitHeight + 20
+        radius: 28
+        Text {{
+            id: time
+            anchors.centerIn: parent
+            text: Qt.formatTime(timeSource.dateTime, "HH:mm")
+            color: "{TEXT_HEX}"
+            font.family: "JetBrainsMono Nerd Font"
+            font.pointSize: 54
+            font.weight: Font.Light
+        }}
+    }}
+    GlassPill {{
+        Layout.alignment: Qt.AlignHCenter
+        implicitWidth: date.implicitWidth + 32
+        implicitHeight: date.implicitHeight + 12
+        Text {{
+            id: date
+            anchors.centerIn: parent
+            text: Qt.formatDate(timeSource.dateTime, "ddd d MMM")
+            color: "{SUBTEXT_HEX}"
+            font.family: "JetBrainsMono Nerd Font"
+            font.pointSize: 11
+        }}
+    }}
+
+    PlasmaClock.Clock {{
+        id: timeSource
+    }}
+}}
+""",
+    "GlassMedia.qml": """// the stock media controls on a pill
+import QtQuick
+import org.kde.kirigami as Kirigami
+
+Item {
+    implicitWidth: media.implicitWidth
+    implicitHeight: media.implicitHeight + Kirigami.Units.largeSpacing * 2
+
+    GlassPill {
+        anchors.fill: parent
+        visible: media.visible  // the controls hide themselves when nothing plays
+    }
+    MediaControls {
+        id: media
+        anchors.fill: parent
+        anchors.margins: Kirigami.Units.largeSpacing
+    }
+}
+""",
+}
+
+# (file, stock text, replacement); each stock text must appear exactly once, or the
+# lock screen stays stock. Only looks change: the unlock logic is always Plasma's own.
+LOCK_PATCHES = [
+    ("LockScreenUi.qml", "        Clock {\n            id: clock\n", "        GlassClock {\n            id: clock\n"),
+    ("LockScreenUi.qml", "            visible: y > 0 && config.alwaysShowClock\n",
+     "            visible: config.alwaysShowClock\n"),
+    ("LockScreenUi.qml", "            y: (mainBlock.userList.y + mainStack.y)/2 - height/2\n",
+     "            y: mainStack.y + mainStack.height / 2 - height - Kirigami.Units.gridUnit * 2\n"),
+    ("LockScreenUi.qml", "            visible: !lockScreenUi.softwareRendering && config.alwaysShowClock\n",
+     "            visible: false  // the clock has a pill instead of a shadow\n"),
+    ("LockScreenUi.qml", "                showUserList: userList.y + mainStack.y > 0\n",
+     "                showUserList: false\n"),
+    ("LockScreenUi.qml", '                    source: "MediaControls.qml"\n', '                    source: "GlassMedia.qml"\n'),
+    ("MainBlock.qml", "            id: passwordBox\n", """            id: passwordBox
+            leftPadding: Kirigami.Units.gridUnit
+            background: GlassPill {
+                implicitHeight: Kirigami.Units.gridUnit * 2.2
+                radius: height / 2
+                lit: passwordBox.activeFocus
+            }
+"""),
+    ("MainBlock.qml", "            id: loginButton\n", """            id: loginButton
+            background: GlassPill {
+                radius: height / 2
+                lit: loginButton.activeFocus || loginButton.hovered
+            }
+"""),
+]
+
+
+def lockscreen(styled=True):
+    """Build LOCK_PKG from the stock shell: the lock screen files copied and patched, the rest
+    symlinked. Rebuilt each time KWin starts, so a Plasma update is picked up (or, if a patch no
+    longer applies, the lock screen simply stays stock)."""
+    new = LOCK_PKG.with_name(LOCK_SHELL + ".new")
+    shutil.rmtree(new, ignore_errors=True)
+    (new / "contents/lockscreen").mkdir(parents=True)
+    meta = json.loads((STOCK_SHELL / "metadata.json").read_text())
+    meta["KPlugin"] = {k: v for k, v in meta["KPlugin"].items() if "[" not in k}
+    meta["KPlugin"].update({"Id": LOCK_SHELL, "Name": "Rice lock screen",
+                            "Description": "The stock lock screen on glass pills (~/.local/bin/rice)"})
+    (new / "metadata.json").write_text(json.dumps(meta, indent=4))
+    for entry in (STOCK_SHELL / "contents").iterdir():
+        if entry.name != "lockscreen":
+            (new / "contents" / entry.name).symlink_to(entry)
+    lock = new / "contents/lockscreen"
+    stock = STOCK_SHELL / "contents/lockscreen"
+    # copies, not symlinks: QML looks up sibling types next to the symlink's target
+    for entry in stock.iterdir():
+        shutil.copy2(entry, lock / entry.name)
+
+    if styled:
+        patched = {}
+        for name, old, replacement in LOCK_PATCHES:
+            text = patched.get(name) or (stock / name).read_text()
+            if text.count(old) != 1:
+                print(f"lock screen left stock: {name} changed upstream ({old.strip()!r} not found)")
+                break
+            patched[name] = text.replace(old, replacement)
+        else:
+            for name, text in {**patched, **LOCK_QML}.items():
+                (lock / name).write_text(text)
+
+    old = LOCK_PKG.with_name(LOCK_SHELL + ".old")
+    shutil.rmtree(old, ignore_errors=True)
+    if LOCK_PKG.exists():
+        LOCK_PKG.rename(old)
+    new.rename(LOCK_PKG)
+    shutil.rmtree(old, ignore_errors=True)
+
+
+def lockscreen_on():
+    lockscreen()
+    dropin = f"""# written by ~/.local/bin/rice: the screen locker uses the rice lock screen
+[Service]
+Environment=PLASMA_DEFAULT_SHELL={LOCK_SHELL}
+ExecStartPre=-%h/.local/bin/rice lockscreen
+"""
+    if not KWIN_DROPIN.exists() or KWIN_DROPIN.read_text() != dropin:
+        KWIN_DROPIN.parent.mkdir(parents=True, exist_ok=True)
+        KWIN_DROPIN.write_text(dropin)
+        run("systemctl", "--user", "daemon-reload")
+        print("the glass lock screen starts with your next login")
+
+
+def lockscreen_off():
+    # without the package the locker falls back to the stock one right away
+    shutil.rmtree(LOCK_PKG, ignore_errors=True)
+    if KWIN_DROPIN.exists():
+        KWIN_DROPIN.unlink()
+        run("systemctl", "--user", "daemon-reload")
+
+
 def islands():
     """Panel Colorizer settings: no panel background, each group of widgets between two
     spacers becomes one rounded glass pill."""
@@ -257,7 +458,7 @@ def islands():
     w["margin"] = {"enabled": True, "side": {"top": 3, "bottom": 3, "left": 8, "right": 8}}
     w["spacing"] = 6
     w["border"].update({"enabled": True, "customSides": False, "width": 1})
-    w["border"]["color"].update({"enabled": True, "sourceType": 0, "custom": "#b4befe", "alpha": 0.16})
+    w["border"]["color"].update({"enabled": True, "sourceType": 0, "custom": GLASS_BORDER, "alpha": GLASS_BORDER_ALPHA})
     w["shadow"]["background"]["enabled"] = False
     return g
 
@@ -342,7 +543,10 @@ def solstice():
     for rule, values in RULES.items():
         for key, value in values.items():
             kwrite("kwinrulesrc", [rule], key, value)
-    existing = [r for r in kread("kwinrulesrc", ["General"], "rules").split(",") if r and r not in RULES]
+    for rule in OLD_RULES:
+        drop_rule(rule)
+    existing = [r for r in kread("kwinrulesrc", ["General"], "rules").split(",")
+                if r and r not in RULES and r not in OLD_RULES]
     rules = list(RULES) + existing
     kwrite("kwinrulesrc", ["General"], "rules", ",".join(rules))
     kwrite("kwinrulesrc", ["General"], "count", len(rules))
@@ -353,6 +557,7 @@ def solstice():
     kwrite("kscreenlockerrc", lock, "PreviewImage", f"file://{WALLPAPER}")
 
     plasma_script(panels_js())
+    lockscreen_on()
     sddm("catppuccin-mocha-red")
     set_links("solstice")
     print("solstice on. `rice plain` goes back. Reopen nvim/alacritty windows to pick it up fully.")
@@ -387,6 +592,11 @@ def plain():
     reconfigure_kwin(effects_on=[e for e in EFFECTS_OFF
                                  if kread("kwinrc", ["Plugins"], f"{e}Enabled", "true") == "true"],
                      effects_off=EFFECTS_ON)
+    # windows keep the opacity the hover script last gave them
+    dbus.SessionBus().get_object("org.kde.KWin", "/Scripting").unloadScript(
+        HOVER_SCRIPT, dbus_interface="org.kde.kwin.Scripting")
+    kwin_script("workspace.stackingOrder.forEach(w => { if (w.normalWindow || w.dialog) w.opacity = 1; });")
+    lockscreen_off()
     sddm(None)
     set_links("plain")
     print("plain look restored. Reopen nvim/alacritty windows to pick it up fully.")
@@ -402,6 +612,9 @@ def main():
         solstice()
     elif arg == "plain":
         plain()
+    elif arg == "lockscreen":  # run by KWin's ExecStartPre, see lockscreen_on()
+        if current() == "solstice":
+            lockscreen()
     elif arg in ("", "status"):
         print(f"current: {current()}\n\n{__doc__.strip()}")
     else:

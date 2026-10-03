@@ -1,0 +1,13 @@
+{
+  "KPlugin": {
+    "Id": "rice-hover-opacity",
+    "Name": "Rice hover opacity",
+    "Description": "Focused and hovered windows are as opaque as the focused one; the rest stay lighter. Fullscreen windows are fully opaque.",
+    "Version": "1.0",
+    "License": "MIT",
+    "EnabledByDefault": false
+  },
+  "X-Plasma-API": "javascript",
+  "X-Plasma-MainScript": "code/main.js",
+  "KPackageStructure": "KWin/Script"
+}

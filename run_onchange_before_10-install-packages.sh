@@ -13,7 +13,7 @@ sudo pacman -S --needed --noconfirm \
 yay -S --needed --noconfirm \
 	catppuccin-plasma-colorscheme-mocha catppuccin-sddm-theme-mocha yamis-icon-theme-git ttf-karla \
 	kwin-effects-better-blur-dx kwin-effect-rounded-corners kwin6-effects-burn-my-windows \
-	kwin-effects-geometry-change plasma6-applets-panel-colorizer plasma6-applets-plasmusic-toolbar
+	kwin-effects-geometry-change kwin-effects-kinetic plasma6-applets-panel-colorizer plasma6-applets-plasmusic-toolbar
 
 # kara pinned past v1.0.0 for the Plasma 6.7 per-monitor desktop fix
 pkgbuild="$CHEZMOI_SOURCE_DIR/dot_local/share/pkgbuilds/kara/PKGBUILD"
