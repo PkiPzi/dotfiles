@@ -84,8 +84,9 @@ KWIN = {
         "WindowClasses": "",
         "BlurMenus": "true",
         "BlurDocks": "false",
-        # frosted acrylic: heavy blur, fine grain, darkened so the wallpaper is only a glow
-        "BlurStrength": 14,
+        # frosted acrylic: blur, fine grain, darkened so the wallpaper is only a glow. 9 rather than 14:
+        # still frosted at about half the GPU cost (the blur doubled the iGPU's load at 4K)
+        "BlurStrength": 9,
         "NoiseStrength": 6,
         "Brightness": 85,
         "Saturation": 100,
