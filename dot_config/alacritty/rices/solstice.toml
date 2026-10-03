@@ -1,10 +1,10 @@
-# solstice: the same glass as the top bar pills (Catppuccin base at 72% over KWin's frosted
-# blur), JetBrains Mono with a little extra line height.
+# solstice: the same glass as the top bar pills (#1e2127, the One Dark base from the original
+# alacritty.yml, at 80% over KWin's frosted blur), JetBrains Mono with a little extra line height.
 [general]
 import = ["~/.config/alacritty/themes/catppuccin.toml"]
 
 [window]
-opacity = 0.72
+opacity = 0.80
 blur = true
 padding = { x = 12, y = 10 }
 
@@ -12,6 +12,9 @@ padding = { x = 12, y = 10 }
 size = 11
 offset = { x = 0, y = 2 }
 normal = { family = "JetBrainsMono Nerd Font", style = "Regular" }
+
+[colors.primary]
+background = "#1e2127"
 
 [colors.cursor]
 text = "#1e1e2e"

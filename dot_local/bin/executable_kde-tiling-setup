@@ -129,6 +129,8 @@ def main():
     for key, value in KROHNKITE.items():
         kwriteconfig("kwinrc", "Script-krohnkite", key, value)
     kwriteconfig("kwinrc", "Plugins", "krohnkiteEnabled", "true")
+    # each screen switches desktops on its own (Plasma 6.7+); Meta+N acts on the focused screen
+    kwriteconfig("kwinrc", "Windows", "PerOutputVirtualDesktops", "true")
     kwin.reconfigure(dbus_interface="org.kde.KWin")
     time.sleep(2)  # let the script load and register its shortcuts
 

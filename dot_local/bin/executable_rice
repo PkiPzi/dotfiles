@@ -44,6 +44,9 @@ MONO_FONT = "JetBrainsMono Nerd Font,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1"
 RED = "243,139,168"
 SURFACE1 = "69,71,90"
 BASE = "#1e1e2e"
+# terminals and bar pills share this: the One Dark base from the original alacritty.yml
+GLASS = "#1e2127"
+GLASS_ALPHA = 0.80
 
 EFFECTS_ON = ["better_blur_dx", "kwin4_effect_shapecorners", "kwin6_effect_aura_glow", "kwin4_effect_geometry_change"]
 EFFECTS_OFF = ["blur", "scale"]  # replaced by better blur and aura glow
@@ -136,7 +139,7 @@ KARA = {
     "plasmaStyleColors": "false",
     "pColor": "#f38ba8",
     "defaultAltTextColors": "false",
-    "altColor": "#1e1e2e",
+    "altColor": GLASS,
     "plasmaSemiColors": "false",
     "semiColor": "#585b70",
     "highlightOpacityFull": "false",
@@ -248,7 +251,7 @@ def islands():
     w = g["widgets"]["normal"]
     w["enabled"] = True
     w["blurBehind"] = True
-    w["backgroundColor"].update({"enabled": True, "sourceType": 0, "custom": BASE, "alpha": 0.72})
+    w["backgroundColor"].update({"enabled": True, "sourceType": 0, "custom": GLASS, "alpha": GLASS_ALPHA})
     w["foregroundColor"]["enabled"] = False
     w["radius"] = {"enabled": True, "corner": {c: 14 for c in ("topLeft", "topRight", "bottomRight", "bottomLeft")}}
     w["margin"] = {"enabled": True, "side": {"top": 3, "bottom": 3, "left": 8, "right": 8}}

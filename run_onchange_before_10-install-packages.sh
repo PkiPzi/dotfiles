@@ -13,8 +13,13 @@ sudo pacman -S --needed --noconfirm \
 yay -S --needed --noconfirm \
 	catppuccin-plasma-colorscheme-mocha catppuccin-sddm-theme-mocha yamis-icon-theme-git ttf-karla \
 	kwin-effects-better-blur-dx kwin-effect-rounded-corners kwin6-effects-burn-my-windows \
-	kwin-effects-geometry-change plasma6-applets-panel-colorizer plasma6-applets-plasmusic-toolbar \
-	plasma6-applets-kara
+	kwin-effects-geometry-change plasma6-applets-panel-colorizer plasma6-applets-plasmusic-toolbar
+
+# kara pinned past v1.0.0 for the Plasma 6.7 per-monitor desktop fix
+pkgbuild="$CHEZMOI_SOURCE_DIR/dot_local/share/pkgbuilds/kara/PKGBUILD"
+if [[ $(pacman -Q plasma6-applets-kara 2>/dev/null) != "plasma6-applets-kara $(sed -n 's/^pkgver=//p' "$pkgbuild")-"* ]]; then
+	(cd "$(mktemp -d)" && cp "$pkgbuild" . && makepkg -si --noconfirm)
+fi
 
 # KDE Store items, checked against the store's md5
 store_get() { # id filename -> path of the verified download

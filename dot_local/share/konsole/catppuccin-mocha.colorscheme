@@ -1,11 +1,11 @@
 [Background]
-Color=30,30,46
+Color=30,33,39
 
 [BackgroundFaint]
-Color=30,30,46
+Color=30,33,39
 
 [BackgroundIntense]
-Color=30,30,46
+Color=30,33,39
 
 [Color0]
 Color=108,112,134
@@ -92,5 +92,5 @@ Color=205,214,244
 Blur=true
 ColorRandomization=false
 Description=Catppuccin Mocha
-Opacity=0.72
+Opacity=0.8
 Wallpaper=

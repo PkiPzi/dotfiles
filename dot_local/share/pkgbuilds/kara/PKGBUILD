@@ -1,0 +1,26 @@
+# kara pinned past v1.0.0 for the Plasma 6.7 per-monitor virtual desktop fix (#74);
+# build steps from the AUR plasma6-applets-kara package. Drop this once kara tags a release.
+pkgname=plasma6-applets-kara
+pkgver=1.0.0.r2
+pkgrel=1
+pkgdesc="KDE Plasma Pager Applet"
+arch=('x86_64')
+url="https://github.com/dhruv8sh/kara"
+license=('GPL-3.0-only')
+makedepends=('git' 'cmake' 'extra-cmake-modules' 'qt6-base' 'qt6-declarative' 'kwin' 'libplasma'
+             'plasma-activities' 'plasma-workspace' 'vulkan-headers')
+_commit=64a843c82cfca7e278727aede3801a04dd95556c
+source=("git+${url}.git#commit=${_commit}")
+sha256sums=('SKIP')
+
+build() {
+  cd "$srcdir/kara"
+  cmake -B build -DCMAKE_BUILD_TYPE=Release
+  cmake --build build
+}
+
+package() {
+  cd "$srcdir/kara"
+  DESTDIR="${pkgdir}" cmake --install build
+  install -Dm644 -t "${pkgdir}/usr/share/licenses/${pkgname}/" LICENSE
+}
