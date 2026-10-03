@@ -115,10 +115,6 @@ KWIN = {
         "screenGapTop": 12,
         "screenGapBottom": 12,
     },
-    "ModifierOnlyShortcuts": {
-        # tap Meta for rofi
-        "Meta": "org.kde.kglobalaccel,/component/rofi_launcher_desktop,org.kde.kglobalaccel.Component,invokeShortcut,_launch",
-    },
 }
 
 NORMAL = 1
@@ -439,6 +435,31 @@ def lockscreen_off():
         run("systemctl", "--user", "daemon-reload")
 
 
+# a lone Meta is an ordinary global shortcut since Plasma 6.7 (kwinrc's ModifierOnlyShortcuts is gone);
+# rice moves it from Plasma's launcher to rofi
+META, ALT_F1 = 0x01000022, 0x09000030
+ROFI = ["rofi-launcher.desktop", "_launch", "Rofi launcher", "Launch rofi"]
+PLASMA_LAUNCHER = ["plasmashell", "activate application launcher", "", ""]
+
+
+def global_keys(action, change):
+    """Rewrite one global shortcut's keys: change(list of keycodes) -> list of keycodes."""
+    accel = dbus.Interface(dbus.SessionBus().get_object("org.kde.kglobalaccel", "/kglobalaccel"),
+                           "org.kde.KGlobalAccel")
+    keys = [int(k[0][0]) for k in accel.shortcutKeys(action) if k[0][0]]
+    accel.setForeignShortcutKeys(action, dbus.Array(
+        [dbus.Struct([dbus.Array([k, 0, 0, 0], signature="i")]) for k in change(keys)], signature="(ai)"))
+
+
+def meta_to_rofi(on):
+    if on:
+        global_keys(PLASMA_LAUNCHER, lambda keys: [k for k in keys if k != META])
+        global_keys(ROFI, lambda keys: [META] + [k for k in keys if k != META])
+    else:
+        global_keys(ROFI, lambda keys: [k for k in keys if k != META])
+        global_keys(PLASMA_LAUNCHER, lambda keys: [META] + ([k for k in keys if k != META] or [ALT_F1]))
+
+
 def islands():
     """Panel Colorizer settings: no panel background, each group of widgets between two
     spacers becomes one rounded glass pill."""
@@ -526,7 +547,9 @@ def solstice():
     (apps / "rofi-launcher.desktop").write_text(ROFI_DESKTOP)
     accel = dbus.Interface(dbus.SessionBus().get_object("org.kde.kglobalaccel", "/kglobalaccel"),
                            "org.kde.KGlobalAccel")
-    accel.doRegister(["rofi-launcher.desktop", "_launch", "Rofi launcher", "Launch rofi"])
+    accel.doRegister(ROFI)
+    meta_to_rofi(True)
+    kdelete("kwinrc", ["ModifierOnlyShortcuts"], "Meta")  # the pre-6.7 way
 
     run("plasma-apply-colorscheme", "CatppuccinMochaRed", check=False, stdout=subprocess.DEVNULL)
     run("plasma-apply-desktoptheme", "Amethyst.Haze", check=False, stdout=subprocess.DEVNULL)
@@ -597,6 +620,7 @@ def plain():
         HOVER_SCRIPT, dbus_interface="org.kde.kwin.Scripting")
     kwin_script("workspace.stackingOrder.forEach(w => { if (w.normalWindow || w.dialog) w.opacity = 1; });")
     lockscreen_off()
+    meta_to_rofi(False)
     sddm(None)
     set_links("plain")
     print("plain look restored. Reopen nvim/alacritty windows to pick it up fully.")
