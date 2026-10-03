@@ -285,6 +285,8 @@ def login_screen(on):
             run("sudo", "install", "-Dm644", str(WALLPAPER), str(LOGIN_WALLPAPER))
             run("sudo", "kwriteconfig6", "--file", str(LOGIN_CONF), *group_args,
                 "--key", "Image", f"file://{LOGIN_WALLPAPER}")
+            # kwriteconfig6 as root makes it 600, and the greeter runs as its own user
+            run("sudo", "chmod", "644", str(LOGIN_CONF))
         else:
             if LOGIN_CONF.exists():
                 run("sudo", "kwriteconfig6", "--file", str(LOGIN_CONF), *group_args, "--key", "Image", "--delete")
@@ -388,6 +390,10 @@ LOCK_PATCHES = [
     ("LockScreenUi.qml", '                    source: "MediaControls.qml"\n', '                    source: "GlassMedia.qml"\n'),
     ("MainBlock.qml", "            id: passwordBox\n", """            id: passwordBox
             leftPadding: Kirigami.Units.gridUnit
+            // the reveal-password eye sits 1px from the edge, made for Plasma's square frame;
+            // inset it so it clears the pill's curve
+            _rightActionsRow.anchors.rightMargin: Kirigami.Units.gridUnit * 0.75
+            rightPadding: _rightActionsRow.width + Kirigami.Units.gridUnit * 0.75 + Kirigami.Units.smallSpacing
             background: GlassPill {
                 implicitHeight: Kirigami.Units.gridUnit * 2.2
                 radius: height / 2

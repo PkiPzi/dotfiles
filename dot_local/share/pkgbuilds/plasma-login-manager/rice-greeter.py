@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Restyle the Plasma Login Manager greeter like the rice lock screen (~/.local/bin/rice LOCK_PATCHES):
-clock on glass pills, password field and buttons as glass pills, no user list.
+clock on glass pills, password field and buttons as glass pills. Unlike the lock screen the
+user list stays: Login.qml asks for a username whenever it's hidden.
 
 Only looks change; login logic stays Plasma's. Each stock text must appear exactly once,
 otherwise the build stops, so a changed upstream greeter never gets half-patched."""
@@ -19,12 +20,8 @@ PATCHES = [
      "        GlassClock {\n            id: clock\n"),
     ("qml/Main.qml", "            visible: y > 0 && Settings.showClock\n",
      "            visible: Settings.showClock\n"),
-    ("qml/Main.qml", "            y: (userListComponent.userList.y + mainStack.y)/2 - height/2\n",
-     "            y: mainStack.y + mainStack.height / 2 - height - Kirigami.Units.gridUnit * 2\n"),
     ("qml/Main.qml", "            visible: !softwareRendering && clock.visible\n",
      "            visible: false  // the clock has a pill instead of a shadow\n"),
-    ("qml/Main.qml", "                showUserList: !PlasmaLogin.GreeterState.beyondUserLimit\n",
-     "                showUserList: false\n"),
     ("qml/Login.qml", "        id: userNameInput\n", """        id: userNameInput
         leftPadding: Kirigami.Units.gridUnit
         background: GlassPill {
@@ -35,6 +32,10 @@ PATCHES = [
 """),
     ("qml/Login.qml", "            id: passwordBox\n", """            id: passwordBox
             leftPadding: Kirigami.Units.gridUnit
+            // the reveal-password eye sits 1px from the edge, made for Plasma's square frame;
+            // inset it so it clears the pill's curve
+            _rightActionsRow.anchors.rightMargin: Kirigami.Units.gridUnit * 0.75
+            rightPadding: _rightActionsRow.width + Kirigami.Units.gridUnit * 0.75 + Kirigami.Units.smallSpacing
             background: GlassPill {
                 implicitHeight: Kirigami.Units.gridUnit * 2.2
                 radius: height / 2
