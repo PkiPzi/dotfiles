@@ -40,7 +40,7 @@ Alacritty gets the soft version of the look: a frosted background, subtext1 inst
 
 `rice plain` restores the KDE files saved when solstice was switched on (panels, colours, effects, rules), the stock lock screen and the plain alacritty/prompt. `rice` alone shows which one is active.
 
-Left out of solstice on purpose: fish (zsh stays), Kvantum (Breeze with Catppuccin colours looks the same without Kvantum's Plasma 6 glitches), kitty and the fastfetch image (alacritty can't draw images), keyd, Spotify/Zen/Obsidian themes.
+Left out of solstice on purpose: fish (zsh stays), Kvantum (Breeze with Catppuccin colours looks the same without Kvantum's Plasma 6 glitches), kitty (alacritty-graphics draws Sixel images, so yazi image and PDF previews are sharp anyway), keyd, Spotify/Zen/Obsidian themes.
 
 ## Competitive programming (C++)
 

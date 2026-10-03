@@ -1,0 +1,6 @@
+# Alacritty here is alacritty-graphics (Sixel), so previews are real images: let them be big and sharp
+[preview]
+max_width     = 1200
+max_height    = 1600
+image_filter  = "lanczos3"
+image_quality = 90

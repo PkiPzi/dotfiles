@@ -4,10 +4,13 @@ set -euo pipefail
 
 sudo pacman -S --needed --noconfirm \
 	zsh zsh-completions zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search \
-	alacritty ttf-firacode-nerd \
+	ttf-firacode-nerd \
 	fzf fd ripgrep eza bat zoxide starship git-delta \
 	neovim tree-sitter-cli lazygit unzip gcc gdb fastfetch btop wl-clipboard python-dbus \
 	papirus-icon-theme ttf-jetbrains-mono-nerd rofi yazi cava glow chafa
+
+# alacritty with Sixel images (ayosec's graphics fork) so yazi previews are real pixels
+yay -S --needed --noconfirm --mflags --nocheck alacritty-graphics
 
 # the solstice rice (see ~/.local/bin/rice)
 yay -S --needed --noconfirm \
