@@ -1,0 +1,13 @@
+{
+    "KPackageStructure": "KWin/Effect",
+    "KPlugin": {
+        "Category": "Window Management",
+        "Description": "Desktops along the top, the current desktop's windows on a glass panel below (~/.local/bin/rice)",
+        "EnabledByDefault": false,
+        "Id": "riceoverview",
+        "License": "GPL",
+        "Name": "Rice overview"
+    },
+    "X-KWin-Border-Activate": true,
+    "X-Plasma-API": "declarativescript"
+}

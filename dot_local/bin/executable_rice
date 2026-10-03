@@ -63,7 +63,10 @@ GLASS_BORDER_ALPHA = 0.16
 EFFECTS_ON = ["better_blur_dx", "kwin4_effect_shapecorners", "kwin6_effect_aura_glow", "kwin4_effect_geometry_change",
               # light animations: springy maximize and menus (JS), and built-in magic lamp minimize,
               # crossfading desktop switch and a gentle wobble when dragging floating windows
-              "kinetic_maximize", "kinetic_fadingpopups", "magiclamp", "fadedesktop", "wobblywindows"]
+              "kinetic_maximize", "kinetic_fadingpopups", "magiclamp", "fadedesktop", "wobblywindows",
+              # mission-control style overview on Meta+Tab and the top-left corner, in the glass look
+              # (~/.local/share/kwin/effects/riceoverview)
+              "riceoverview"]
 # replaced by better blur, aura glow, and the animations above
 EFFECTS_OFF = ["blur", "scale", "maximize", "fadingpopups", "squash", "slide"]
 # focused and hovered windows are opaque-ish, the rest lighter; the levels live in
@@ -104,6 +107,9 @@ KWIN = {
         # krohnkite windows count as tiled; keep them rounded and outlined
         "DisableRoundTile": "false",
         "DisableOutlineTile": "false",
+    },
+    "Effect-overview": {
+        "BorderActivate": 9,  # Plasma's Overview gives the top-left corner to riceoverview (9 = none)
     },
     "Effect-wobblywindows": {
         "WobblynessLevel": 0,  # the least wobbly preset
