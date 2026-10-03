@@ -1,0 +1,65 @@
+# Arch's plasma-login-manager with the greeter restyled like the rice lock screen, see
+# rice-greeter.py. pkgrel 1.1 sits just above Arch's build of the same version, so the next
+# Plasma update replaces it with the stock greeter (unstyled, never broken); bump pkgver and
+# sha256sums to match and rebuild:  cd ~/.local/share/pkgbuilds/plasma-login-manager && makepkg -si
+# Build steps and dependencies from Arch's PKGBUILD (Antonio Rojas <arojas@archlinux.org>).
+
+pkgname=plasma-login-manager
+pkgver=6.7.5
+_dirver=$(echo $pkgver | cut -d. -f1-3)
+pkgrel=1.1
+arch=(x86_64)
+pkgdesc='Plasma Login Manager (rice glass greeter)'
+url='https://kde.org/plasma-desktop/'
+license=(GPL-2.0-or-later)
+depends=(glibc
+         kauth
+         kcmutils
+         kconfig
+         kcoreaddons
+         kdbusaddons
+         ki18n
+         kio
+         kirigami
+         kpackage
+         kservice
+         kwindowsystem
+         layer-shell-qt
+         libkscreen
+         libplasma
+         libstdc++
+         libxau
+         pam
+         plasma-workspace
+         qt6-5compat
+         qt6-base
+         qt6-declarative
+         sh
+         systemd-libs)
+makedepends=(extra-cmake-modules
+             python
+             qt6-tools)
+groups=(plasma)
+source=(https://download.kde.org/stable/plasma/$_dirver/$pkgname-$pkgver.tar.xz
+        rice-greeter.py
+        GlassPill.qml
+        GlassClock.qml)
+sha256sums=('6ed7c3bbac1c79bc1a21c330923804aa6c3f720fafd6accb1a6a1fada684e84f'
+            'SKIP'
+            'SKIP'
+            'SKIP')
+
+prepare() {
+  python rice-greeter.py $pkgname-$pkgver "$srcdir"
+}
+
+build() {
+  cmake -B build -S $pkgname-$pkgver \
+    -DCMAKE_INSTALL_LIBEXECDIR=lib \
+    -DDBUS_CONFIG_FILENAME=plasma_org.freedesktop.DisplayManager.conf
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+}

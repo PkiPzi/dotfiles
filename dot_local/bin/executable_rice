@@ -35,6 +35,12 @@ KDE_FILES = [
     "kscreenlockerrc",
 ]
 SDDM_CONF = Path("/etc/sddm.conf.d/10-rice.conf")
+# Plasma Login Manager (replaced SDDM here). Its glass layout comes from a patched package,
+# ~/.local/share/pkgbuilds/plasma-login-manager; rice only sets the wallpaper, copied where the
+# greeter's own user can read it
+LOGIN_CONF = Path("/etc/plasmalogin.conf")
+LOGIN_WALLPAPER = Path("/usr/local/share/wallpapers/rice/storm.jpg")
+LOGIN_IMAGE_GROUPS = ["Greeter", "Wallpaper", "org.kde.image", "General"]
 # the lock screen lives in the Plasma shell package; the locker (and only the locker, via KWin's
 # environment) gets a copy of the stock one with a few visual patches, see lockscreen()
 STOCK_SHELL = Path("/usr/share/plasma/shells/org.kde.plasma.desktop")
@@ -269,6 +275,22 @@ def sddm(theme):
             run("sudo", "rm", "-f", str(SDDM_CONF))
     except subprocess.CalledProcessError:
         print("login screen theme skipped (needs sudo)")
+
+
+def login_screen(on):
+    """Plasma Login Manager wallpaper; needs sudo."""
+    group_args = [a for g in LOGIN_IMAGE_GROUPS for a in ("--group", g)]
+    try:
+        if on:
+            run("sudo", "install", "-Dm644", str(WALLPAPER), str(LOGIN_WALLPAPER))
+            run("sudo", "kwriteconfig6", "--file", str(LOGIN_CONF), *group_args,
+                "--key", "Image", f"file://{LOGIN_WALLPAPER}")
+        else:
+            if LOGIN_CONF.exists():
+                run("sudo", "kwriteconfig6", "--file", str(LOGIN_CONF), *group_args, "--key", "Image", "--delete")
+            run("sudo", "rm", "-rf", str(LOGIN_WALLPAPER.parent))
+    except subprocess.CalledProcessError:
+        print("login screen wallpaper skipped (needs sudo)")
 
 
 def argb(hex_color, alpha):
@@ -636,6 +658,7 @@ def solstice():
     plasma_script(panels_js())
     lockscreen_on()
     sddm("catppuccin-mocha-red")
+    login_screen(True)
     set_links("solstice")
     print("solstice on. `rice plain` goes back. Reopen nvim/alacritty windows to pick it up fully.")
 
@@ -676,6 +699,7 @@ def plain():
     lockscreen_off()
     meta_to_rofi(False)
     sddm(None)
+    login_screen(False)
     set_links("plain")
     print("plain look restored. Reopen nvim/alacritty windows to pick it up fully.")
 
