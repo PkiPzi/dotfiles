@@ -163,11 +163,10 @@ CLOCK = {
     "dateDisplayFormat": 1,  # beside the time
     "use24hFormat": 2,
     "autoFontAndSize": "false",
-    # same face as the workspace numbers and the music title on either side
-    "fontFamily": "Karla",
+    "fontFamily": "Geist",
     "fontWeight": 600,
     "fontStyleName": "SemiBold",
-    "fontSize": 10,
+    # fontSize is set per screen, see clock_points()
 }
 
 ROFI_DESKTOP = """[Desktop Entry]
@@ -464,6 +463,29 @@ def meta_to_rofi(on):
         global_keys(PLASMA_LAUNCHER, lambda keys: [META] + ([k for k in keys if k != META] or [ALT_F1]))
 
 
+CLOCK_PX = 14  # the clock text's height on every screen, in logical pixels
+CLOCK_PILL_SIDES = 16  # the clock's pill gets more room either side than the others (8)
+
+
+def clock_points():
+    """Plasma's clock turns a custom fontSize (points) into pixels with the screen's physical
+    pixel density, so one size looks bigger on the laptop than on the scaled 4K monitor. Give
+    each screen the point size that comes out at CLOCK_PX: [{x, y, points}] by screen position."""
+    try:
+        out = json.loads(run("kscreen-doctor", "-j", capture_output=True, text=True).stdout)["outputs"]
+    except (subprocess.CalledProcessError, ValueError, KeyError):
+        return []
+    sizes = []
+    for o in out:
+        if not o.get("enabled") or not o.get("sizeMM", {}).get("width"):
+            continue
+        mode = next(m for m in o["modes"] if m["id"] == o["currentModeId"])
+        logical_width = mode["size"]["width"] / o["scale"]
+        ppi = logical_width / (o["sizeMM"]["width"] / 25.4)  # what Qt calls Screen.pixelDensity, per inch
+        sizes.append({"x": o["pos"]["x"], "y": o["pos"]["y"], "points": round(CLOCK_PX * 72 / ppi)})
+    return sizes
+
+
 def islands():
     """Panel Colorizer settings: no panel background, each group of widgets between two
     spacers becomes one rounded glass pill."""
@@ -488,10 +510,26 @@ def islands():
     return g
 
 
+def clock_pill():
+    """The normal pill with wider sides; Panel Colorizer overrides replace, not merge, so it's whole."""
+    pill = islands()["widgets"]["normal"]
+    pill["margin"]["side"].update({"left": CLOCK_PILL_SIDES, "right": CLOCK_PILL_SIDES})
+    return pill
+
+
 def panels_js():
     return f"""
 var colorizer = {json.dumps(json.dumps(islands()))};
+var clockPill = {json.dumps(clock_pill())};
 var clock = {json.dumps(CLOCK)};
+var clockPoints = {json.dumps(clock_points())};
+
+function clockFor(screen) {{
+    var g = screenGeometry(screen), c = JSON.parse(JSON.stringify(clock));
+    c.fontSize = 10;
+    clockPoints.forEach(function (o) {{ if (o.x == g.x && o.y == g.y) c.fontSize = o.points; }});
+    return c;
+}}
 var kara = {json.dumps(KARA)};
 var wallpaper = {json.dumps("file://" + str(WALLPAPER))};
 
@@ -511,7 +549,8 @@ for (var s = 0; s < screenCount; s++) {{
     bar.floating = true;
     configure(bar.addWidget("org.dhruv8sh.kara"), ["General"], kara);
     bar.addWidget("org.kde.plasma.panelspacer");
-    configure(bar.addWidget("org.kde.plasma.digitalclock"), ["Appearance"], clock);
+    var clockWidget = bar.addWidget("org.kde.plasma.digitalclock");
+    configure(clockWidget, ["Appearance"], clockFor(s));
     bar.addWidget("org.kde.plasma.panelspacer");
     // a paused title that keeps scrolling redraws (and re-blurs) the bar every frame
     configure(bar.addWidget("plasmusic-toolbar"), ["General"], {{ pauseTextScrollingWhileMediaIsNotPlaying: true }});
@@ -521,6 +560,10 @@ for (var s = 0; s < screenCount; s++) {{
         islandsEnabled: true,
         islandSeparatorWidget: "org.kde.plasma.panelspacer",
         hideWidget: true,
+        configurationOverrides: JSON.stringify({{
+            overrides: {{ clock: {{ normal: clockPill, disabledFallback: true }} }},
+            associations: [{{ id: clockWidget.id, name: "org.kde.plasma.digitalclock", presets: ["clock"] }}],
+        }}),
     }});
 }}
 

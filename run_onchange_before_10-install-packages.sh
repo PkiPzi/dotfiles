@@ -14,7 +14,7 @@ yay -S --needed --noconfirm --mflags --nocheck alacritty-graphics
 
 # the solstice rice (see ~/.local/bin/rice)
 yay -S --needed --noconfirm \
-	catppuccin-plasma-colorscheme-mocha catppuccin-sddm-theme-mocha yamis-icon-theme-git ttf-karla \
+	catppuccin-plasma-colorscheme-mocha catppuccin-sddm-theme-mocha yamis-icon-theme-git ttf-karla ttf-geist \
 	kwin-effects-better-blur-dx kwin-effect-rounded-corners kwin6-effects-burn-my-windows \
 	kwin-effects-geometry-change kwin-effects-kinetic plasma6-applets-panel-colorizer plasma6-applets-plasmusic-toolbar
 
