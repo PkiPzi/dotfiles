@@ -162,8 +162,11 @@ CLOCK = {
     "dateDisplayFormat": 1,  # beside the time
     "use24hFormat": 2,
     "autoFontAndSize": "false",
-    "fontFamily": "JetBrainsMono Nerd Font",
-    "fontSize": 9,
+    # same face as the workspace numbers and the music title on either side
+    "fontFamily": "Karla",
+    "fontWeight": 600,
+    "fontStyleName": "SemiBold",
+    "fontSize": 10,
 }
 
 ROFI_DESKTOP = """[Desktop Entry]
@@ -509,7 +512,8 @@ for (var s = 0; s < screenCount; s++) {{
     bar.addWidget("org.kde.plasma.panelspacer");
     configure(bar.addWidget("org.kde.plasma.digitalclock"), ["Appearance"], clock);
     bar.addWidget("org.kde.plasma.panelspacer");
-    bar.addWidget("plasmusic-toolbar");
+    // a paused title that keeps scrolling redraws (and re-blurs) the bar every frame
+    configure(bar.addWidget("plasmusic-toolbar"), ["General"], {{ pauseTextScrollingWhileMediaIsNotPlaying: true }});
     bar.addWidget("org.kde.plasma.systemtray");
     configure(bar.addWidget("luisbocanegra.panel.colorizer"), ["General"], {{
         globalSettings: colorizer,
