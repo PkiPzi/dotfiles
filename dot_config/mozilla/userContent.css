@@ -1,0 +1,6 @@
+/* Cheap forced dark for sites with no dark theme: a CSS invert (no JS, unlike Dark Reader).
+   Add a domain(...) per site; images and video are flipped back so they look normal. */
+@-moz-document domain(codeforces.com) {
+  html { filter: invert(1) hue-rotate(180deg) !important; background: #fff !important; }
+  img, video, canvas, picture, svg image { filter: invert(1) hue-rotate(180deg) !important; }
+}

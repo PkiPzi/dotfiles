@@ -1,7 +1,7 @@
 #!/bin/bash
-# user.js hash: {{ include "dot_config/mozilla/user.js" | sha256sum }}
+# user.js hash: {{ include "dot_config/mozilla/user.js" | sha256sum }} {{ include "dot_config/mozilla/userContent.css" | sha256sum }}
 # Link the shared memory prefs into each Firefox release profile (a new machine has a different profile name).
 for p in "$HOME"/.config/mozilla/firefox/*.default-release "$HOME"/.mozilla/firefox/*.default-release; do
-	[ -d "$p" ] && ln -sf "$HOME/.config/mozilla/user.js" "$p/user.js"
+	[ -d "$p" ] && { ln -sf "$HOME/.config/mozilla/user.js" "$p/user.js"; mkdir -p "$p/chrome"; ln -sf "$HOME/.config/mozilla/userContent.css" "$p/chrome/userContent.css"; }
 done
 true

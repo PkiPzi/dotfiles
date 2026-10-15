@@ -24,3 +24,8 @@ user_pref("datareporting.healthreport.uploadEnabled", false);
 user_pref("browser.ping-centre.telemetry", false);
 user_pref("app.shield.optoutstudies.enabled", false);
 user_pref("app.normandy.enabled", false);
+
+// Dark mode without Dark Reader: sites that support prefers-color-scheme go dark,
+// and userContent.css inverts a short list of light-only sites.
+user_pref("layout.css.prefers-color-scheme.content-override", 0);
+user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);

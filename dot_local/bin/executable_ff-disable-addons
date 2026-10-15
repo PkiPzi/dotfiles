@@ -1,0 +1,15 @@
+#!/usr/bin/env python3
+"""ff-disable-addons <id>...: disable Firefox add-ons by id in every release profile. Firefox must be closed
+(it rewrites extensions.json on exit). Keeps extensions.json.bak. Re-enable in about:addons."""
+import glob, json, os, shutil, subprocess, sys
+if subprocess.run(["pgrep", "-x", "firefox"], capture_output=True).returncode == 0:
+    sys.exit("close Firefox first")
+for f in glob.glob(os.path.expanduser("~/.config/mozilla/firefox/*.default-release/extensions.json")):
+    d = json.load(open(f))
+    n = 0
+    for a in d["addons"]:
+        if a["id"] in sys.argv[1:] and a["active"]:
+            a["active"], a["userDisabled"], n = False, True, n + 1
+    shutil.copy(f, f + ".bak")
+    json.dump(d, open(f, "w"))
+    print(f"{n} disabled in {f}")
