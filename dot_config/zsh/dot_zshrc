@@ -1,6 +1,10 @@
 # ~/.config/zsh/.zshrc
 [[ $- != *i* ]] && return
 
+# dsa (dsa-judge): completions from `dsa completions zsh --install`; must precede compinit
+fpath=("$HOME/.local/share/zsh/site-functions" $fpath)
+export DSA_EDITOR="code --profile 'Google practice'"
+
 for f in settings completion aliases functions bindings; do
 	source "$ZDOTDIR/$f.zsh"
 done
