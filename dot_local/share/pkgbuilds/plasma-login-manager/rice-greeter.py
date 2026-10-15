@@ -43,6 +43,9 @@ PATCHES = [
             }
 """),
     ("qml/Login.qml", "            id: loginButton\n", """            id: loginButton
+            // the pill is taller than Plasma's frame and the icon grows with the button; keep it label-sized
+            icon.width: Kirigami.Units.iconSizes.small
+            icon.height: Kirigami.Units.iconSizes.small
             background: GlassPill {
                 radius: height / 2
                 lit: loginButton.activeFocus || loginButton.hovered

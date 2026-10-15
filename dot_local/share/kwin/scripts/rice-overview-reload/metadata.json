@@ -1,0 +1,13 @@
+{
+  "KPlugin": {
+    "Id": "rice-overview-reload",
+    "Name": "Rice overview reload",
+    "Description": "Reloads the rice overview effect when monitors are added or removed; it stops answering Meta+Tab and the top-left corner after a hotplug otherwise.",
+    "Version": "1.0",
+    "License": "MIT",
+    "EnabledByDefault": false
+  },
+  "X-Plasma-API": "javascript",
+  "X-Plasma-MainScript": "code/main.js",
+  "KPackageStructure": "KWin/Script"
+}

@@ -41,6 +41,8 @@ SDDM_CONF = Path("/etc/sddm.conf.d/10-rice.conf")
 LOGIN_CONF = Path("/etc/plasmalogin.conf")
 LOGIN_WALLPAPER = Path("/usr/local/share/wallpapers/rice/storm.jpg")
 LOGIN_IMAGE_GROUPS = ["Greeter", "Wallpaper", "org.kde.image", "General"]
+LOGIN_KDEGLOBALS = Path("/var/lib/plasmalogin/.config/kdeglobals")
+ICONS = "yet-another-monochrome-icon-set"
 # the lock screen lives in the Plasma shell package; the locker (and only the locker, via KWin's
 # environment) gets a copy of the stock one with a few visual patches, see lockscreen()
 STOCK_SHELL = Path("/usr/share/plasma/shells/org.kde.plasma.desktop")
@@ -66,18 +68,16 @@ GLASS_ALPHA = 0.80
 GLASS_BORDER = "#b4befe"  # faint lavender edge on the pills
 GLASS_BORDER_ALPHA = 0.16
 
-EFFECTS_ON = ["better_blur_dx", "kwin4_effect_shapecorners", "kwin6_effect_aura_glow", "kwin4_effect_geometry_change",
-              # light animations: springy maximize and menus (JS), and built-in magic lamp minimize,
-              # crossfading desktop switch and a gentle wobble when dragging floating windows
-              "kinetic_maximize", "kinetic_fadingpopups", "magiclamp", "fadedesktop", "wobblywindows",
+EFFECTS_ON = ["better_blur_dx", "kwin4_effect_shapecorners", "kwin4_effect_geometry_change", "fadedesktop",
               # mission-control style overview on Meta+Tab and the top-left corner, in the glass look
               # (~/.local/share/kwin/effects/riceoverview)
               "riceoverview"]
-# replaced by better blur, aura glow, and the animations above
+# replaced by better blur and the animations above
 EFFECTS_OFF = ["blur", "scale", "maximize", "fadingpopups", "squash", "slide"]
 # focused and hovered windows are opaque-ish, the rest lighter; the levels live in
 # ~/.local/share/kwin/scripts/rice-hover-opacity/contents/code/main.js
 HOVER_SCRIPT = "rice-hover-opacity"
+RELOAD_SCRIPT = "rice-overview-reload"  # reloads riceoverview after a monitor hotplug
 
 KWIN = {
     "Plugins": {
@@ -85,6 +85,7 @@ KWIN = {
         **{f"{e}Enabled": "false" for e in EFFECTS_OFF},
         # window opacity, including fullscreen, is done by the hover script below
         f"{HOVER_SCRIPT}Enabled": "true",
+        f"{RELOAD_SCRIPT}Enabled": "true",
         "FullOpacityFSEnabled": "false",
     },
     "Effect-better-blur-dx": {
@@ -116,10 +117,6 @@ KWIN = {
     },
     "Effect-overview": {
         "BorderActivate": 9,  # Plasma's Overview gives the top-left corner to riceoverview (9 = none)
-    },
-    "Effect-wobblywindows": {
-        "WobblynessLevel": 0,  # the least wobbly preset
-        "ResizeWobble": "false",  # geometry change animates resizes
     },
     "Script-krohnkite": {
         "screenGapBetween": 12,
@@ -278,8 +275,11 @@ def sddm(theme):
 
 
 def login_screen(on):
-    """Plasma Login Manager wallpaper; needs sudo."""
+    """Plasma Login Manager wallpaper and icons; needs sudo. The greeter runs as the plasmalogin
+    user, which reads its own kdeglobals (and keeps Breeze icons unless told otherwise)."""
     group_args = [a for g in LOGIN_IMAGE_GROUPS for a in ("--group", g)]
+    greeter_icons = ("sudo", "-u", "plasmalogin", "kwriteconfig6", "--file", str(LOGIN_KDEGLOBALS),
+                     "--group", "Icons", "--key", "Theme")
     try:
         if on:
             run("sudo", "install", "-Dm644", str(WALLPAPER), str(LOGIN_WALLPAPER))
@@ -287,12 +287,14 @@ def login_screen(on):
                 "--key", "Image", f"file://{LOGIN_WALLPAPER}")
             # kwriteconfig6 as root makes it 600, and the greeter runs as its own user
             run("sudo", "chmod", "644", str(LOGIN_CONF))
+            run(*greeter_icons, ICONS)
         else:
             if LOGIN_CONF.exists():
                 run("sudo", "kwriteconfig6", "--file", str(LOGIN_CONF), *group_args, "--key", "Image", "--delete")
             run("sudo", "rm", "-rf", str(LOGIN_WALLPAPER.parent))
+            run(*greeter_icons, "--delete")
     except subprocess.CalledProcessError:
-        print("login screen wallpaper skipped (needs sudo)")
+        print("login screen wallpaper and icons skipped (needs sudo)")
 
 
 def argb(hex_color, alpha):
@@ -635,7 +637,7 @@ def solstice():
 
     run("plasma-apply-colorscheme", "CatppuccinMochaRed", check=False, stdout=subprocess.DEVNULL)
     run("plasma-apply-desktoptheme", "Amethyst.Haze", check=False, stdout=subprocess.DEVNULL)
-    run("/usr/lib/plasma-changeicons", "yet-another-monochrome-icon-set")
+    run("/usr/lib/plasma-changeicons", ICONS)
     for key, font in [("font", UI_FONT), ("menuFont", UI_FONT), ("toolBarFont", UI_FONT),
                       ("smallestReadableFont", SMALL_FONT), ("fixed", MONO_FONT)]:
         kwrite("kdeglobals", ["General"], key, font)
@@ -701,6 +703,8 @@ def plain():
     # windows keep the opacity the hover script last gave them
     dbus.SessionBus().get_object("org.kde.KWin", "/Scripting").unloadScript(
         HOVER_SCRIPT, dbus_interface="org.kde.kwin.Scripting")
+    dbus.SessionBus().get_object("org.kde.KWin", "/Scripting").unloadScript(
+        RELOAD_SCRIPT, dbus_interface="org.kde.kwin.Scripting")
     kwin_script("workspace.stackingOrder.forEach(w => { if (w.normalWindow || w.dialog) w.opacity = 1; });")
     lockscreen_off()
     meta_to_rofi(False)

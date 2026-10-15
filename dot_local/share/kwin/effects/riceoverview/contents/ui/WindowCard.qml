@@ -82,10 +82,9 @@ ExpoCell {
         KWinComponents.WindowThumbnail {
             id: thumbSource
             wId: thumb.window.internalId
-            scale: targetScale * (thumb.lit && !activeDragHandler.active ? 1.03 : 1)
+            scale: targetScale
             width: mainContent.width
             height: mainContent.height
-            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
 
             layer.enabled: true
             layer.effect: OpacityMask {
@@ -144,9 +143,9 @@ ExpoCell {
                 id: returnAnimation
                 property bool active: false
                 onRunningChanged: active = running
-                NumberAnimation { target: thumbSource; properties: "x,y"; to: 0; duration: thumb.windowHeap.animationDuration; easing.type: Easing.InOutCubic }
-                NumberAnimation { target: thumbSource; property: "width"; to: mainContent.width; duration: thumb.windowHeap.animationDuration; easing.type: Easing.InOutCubic }
-                NumberAnimation { target: thumbSource; property: "height"; to: mainContent.height; duration: thumb.windowHeap.animationDuration; easing.type: Easing.InOutCubic }
+                NumberAnimation { target: thumbSource; properties: "x,y"; to: 0; duration: 0; easing.type: Easing.InOutCubic }
+                NumberAnimation { target: thumbSource; property: "width"; to: mainContent.width; duration: 0; easing.type: Easing.InOutCubic }
+                NumberAnimation { target: thumbSource; property: "height"; to: mainContent.height; duration: 0; easing.type: Easing.InOutCubic }
             }
         }
 

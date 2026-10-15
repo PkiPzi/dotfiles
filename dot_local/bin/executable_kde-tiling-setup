@@ -72,7 +72,9 @@ BIND = {
     ("kwin", "KrohnkiteRotatePart"): ["Meta+Shift+R"],
     ("kwin", "KrohnkiteTileLayout"): ["Meta+T"],
     ("kwin", "KrohnkiteMonocleLayout"): ["Meta+M"],
-    # Meta+Tab and the top-left corner belong to the rice overview (~/.local/bin/rice)
+    # Meta+Tab and the top-left corner belong to the rice overview (~/.local/bin/rice); Plasma's
+    # window switcher also claims Meta+Tab by default and wins, so it keeps only Alt+Tab
+    ("kwin", "Walk Through Windows"): ["Alt+Tab"],
     ("kwin", "Grid View"): ["Meta+G"],
     # apps
     (TERMINAL, "_launch"): ["Meta+Return", "Ctrl+Alt+T"],

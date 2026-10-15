@@ -22,7 +22,10 @@ KWinComponents.SceneEffect {
         }
     }
 
-    delegate: Qt.createComponent("ScreenView.qml")
+    // Declared inline so the effect owns the component. A parentless Qt.createComponent() result is
+    // garbage-collected after a few toggles, leaving KWin a dangling delegate (dead overview, and a
+    // crash in QuickSceneEffect::addScreen when an output appears).
+    delegate: ScreenView {}
 
     Instantiator {
         model: effect.configuration.BorderActivate
@@ -55,8 +58,16 @@ KWinComponents.SceneEffect {
         onTriggered: effect.visible = false
     }
 
+    // KWin can hide the effect on its own (screen changes, lock, another effect); without this
+    // the flag stays true and the next Meta+Tab or corner hit only "closes" what isn't showing
+    onVisibleChanged: {
+        if (!visible) {
+            activated = false;
+        }
+    }
+
     function toggle() {
-        if (activated) {
+        if (activated && visible) {
             deactivate();
         } else {
             activate();
@@ -64,7 +75,7 @@ KWinComponents.SceneEffect {
     }
 
     function activate() {
-        if (activated || deactivateTimer.running) {
+        if (deactivateTimer.running) {
             return;
         }
         visible = true;

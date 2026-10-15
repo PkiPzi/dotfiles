@@ -7,7 +7,7 @@
 pkgname=plasma-login-manager
 pkgver=6.7.5
 _dirver=$(echo $pkgver | cut -d. -f1-3)
-pkgrel=1.1
+pkgrel=1.2
 arch=(x86_64)
 pkgdesc='Plasma Login Manager (rice glass greeter)'
 url='https://kde.org/plasma-desktop/'
