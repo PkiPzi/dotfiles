@@ -8,3 +8,19 @@ user_pref("dom.ipc.processCount", 4);                       // shared web proces
 user_pref("browser.tabs.unloadOnLowMemory", true);          // let Firefox discard background tabs under memory pressure
 user_pref("browser.sessionstore.max_tabs_undo", 5);
 user_pref("browser.sessionstore.interval", 60000);          // less disk churn than the 15 s default
+
+// Less background work: sponsored/Pocket new-tab feeds, suggestions, telemetry and studies
+user_pref("browser.newtabpage.activity-stream.feeds.section.topstories", false);
+user_pref("browser.newtabpage.activity-stream.feeds.system.topstories", false);
+user_pref("browser.newtabpage.activity-stream.showSponsored", false);
+user_pref("browser.newtabpage.activity-stream.showSponsoredTopSites", false);
+user_pref("extensions.pocket.enabled", false);
+user_pref("browser.urlbar.suggest.quicksuggest.sponsored", false);
+user_pref("browser.urlbar.suggest.quicksuggest.nonsponsored", false);
+user_pref("browser.urlbar.suggest.trending", false);
+user_pref("toolkit.telemetry.enabled", false);
+user_pref("toolkit.telemetry.unified", false);
+user_pref("datareporting.healthreport.uploadEnabled", false);
+user_pref("browser.ping-centre.telemetry", false);
+user_pref("app.shield.optoutstudies.enabled", false);
+user_pref("app.normandy.enabled", false);
