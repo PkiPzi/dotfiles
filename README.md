@@ -9,7 +9,7 @@ sudo pacman -S --needed chezmoi git
 chezmoi init --apply <this repo>
 ```
 
-That installs the packages, Krohnkite and switches the login shell to zsh (`run_onchange_before_10-install-packages.sh`), then applies Krohnkite settings, virtual desktops and global shortcuts (`~/.local/bin/kde-tiling-setup`) and the rice (`~/.local/bin/rice`). Log out and back in afterwards.
+That installs the packages, applies memory/OOM tuning (zram swap, earlyoom, sysctl; `run_onchange_before_15-system-tuning.sh`), Krohnkite and switches the login shell to zsh (`run_onchange_before_10-install-packages.sh`), then applies Krohnkite settings, virtual desktops and global shortcuts (`~/.local/bin/kde-tiling-setup`) and the rice (`~/.local/bin/rice`). Log out and back in afterwards.
 
 ## Keys
 
@@ -52,3 +52,7 @@ Left out of solstice on purpose: fish (zsh stays), Kvantum (Breeze with Catppucc
 
 - `chezmoi edit <file>` then `chezmoi apply`, or edit in place and `chezmoi re-add`
 - `chezmoi cd` to commit and push
+
+## Heavy jobs
+
+`heavy <cmd>` runs a command in a memory/CPU-capped systemd scope (soft 10G, hard 12G) so a runaway build can't freeze the desktop. earlyoom (set up by the tuning script) is the backstop.

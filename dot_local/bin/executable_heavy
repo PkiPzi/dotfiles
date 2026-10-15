@@ -1,0 +1,4 @@
+#!/bin/sh
+# heavy <cmd...>: run a big job (build, test suite, model run) capped so it can't starve the desktop.
+# Soft limit throttles it into swap first; hard limit kills just this job; low CPU/IO priority.
+exec systemd-run --user --scope --quiet -p MemoryHigh=10G -p MemoryMax=12G -p CPUWeight=50 -p IOWeight=50 -- "$@"
