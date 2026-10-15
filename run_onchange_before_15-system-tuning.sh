@@ -13,15 +13,22 @@ compression-algorithm = zstd
 swap-priority = 100
 CONF
 
-# swappiness 100 is right for zram; page-cluster 0 = no readahead on swap-in
+# values from the Arch wiki zram page (Pop!_OS defaults): swappiness >100 is right when swap is RAM-fast,
+# page-cluster 0 = no readahead on swap-in, no watermark boosting, earlier background reclaim
 sudo tee /etc/sysctl.d/99-memory.conf >/dev/null <<'CONF'
-vm.swappiness = 100
+vm.swappiness = 180
+vm.watermark_boost_factor = 0
+vm.watermark_scale_factor = 125
 vm.page-cluster = 0
 vm.vfs_cache_pressure = 50
 # start writeback early so a big build/copy can't stall the UI with one huge flush
 vm.dirty_background_ratio = 5
 vm.dirty_ratio = 10
 CONF
+
+# zswap in front of zram double-compresses and starves it (Arch wiki: disable it); set at every boot
+echo 'w /sys/module/zswap/parameters/enabled - - - - 0' | sudo tee /etc/tmpfiles.d/zswap-off.conf >/dev/null
+sudo systemd-tmpfiles --create /etc/tmpfiles.d/zswap-off.conf
 
 # kill the biggest browser/build/LLM process early (at 5% RAM+swap free), never the desktop or claude
 sudo tee /etc/default/earlyoom >/dev/null <<'CONF'
