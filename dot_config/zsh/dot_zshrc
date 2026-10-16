@@ -5,6 +5,16 @@
 fpath=("$HOME/.local/share/zsh/site-functions" $fpath)
 export DSA_EDITOR="code --profile 'Google practice'"
 
+# `dsa open SLUG` also leaves this shell in the work dir (a program cannot cd its parent shell)
+dsa() {
+  local f=${DSA_HOME:-$HOME/dsa-bank}/.last-open
+  [[ $1 == (open|submit) ]] && rm -f $f
+  command dsa "$@"
+  local rc=$?
+  [[ $1 == (open|submit) && -s $f ]] && cd "$(<$f)"  # an accepted submit opens the next part
+  return $rc
+}
+
 for f in settings completion aliases functions bindings; do
 	source "$ZDOTDIR/$f.zsh"
 done
